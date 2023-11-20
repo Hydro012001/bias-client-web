@@ -1,0 +1,111 @@
+.dashboardUl {
+  width: 100%;
+  background-color: var(--main-color);
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  height: 4vw;
+  position: static;
+  top: 0;
+}
+.dashboardUl li {
+  display: inline-flex;
+}
+
+.dashboardUl li .Link {
+  padding: 10px 10px;
+  color: white;
+}
+
+.user-actions {
+  display: flex;
+  margin-right: 30px;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.dashboardUl h1 {
+  margin-left: 20px;
+  color: var(--fourth-color);
+}
+
+.dashboardUl li .Link:hover {
+  background-color: var(--fourth-color);
+  color: var(--main-color);
+  border-radius: 10px;
+}
+
+.dashboardUl li .logout:hover::before {
+  color: var(--fourth-color);
+  content: "Logout";
+  font-weight: bold;
+  position: absolute;
+  background-color: var(--main-color);
+  top: 50px;
+  right: 10px;
+  padding: 10px 10px;
+  border-radius: 1px;
+}
+
+.active {
+  background-color: var(--fourth-color);
+  color: var(--main-color);
+  border-radius: 10px;
+  padding: 10px 10px;
+}
+
+.side-bar {
+  width: 5vw;
+  height: 90vh;
+  position: absolute;
+  padding-top: 1%;
+  list-style-type: none;
+  float: left;
+  overflow: hidden;
+  transition: width 0.6s ease-in-out;
+}
+.side-bar .text {
+  display: none;
+}
+.side-bar:hover {
+  width: 16vw;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: normal;
+}
+.side-bar:hover .text {
+  display: flex;
+  margin-left: 20px;
+}
+
+.side-bar li .link {
+  color: var(--third-color);
+  display: block;
+  padding: 20px 20px;
+  text-decoration: none;
+  cursor: pointer;
+  display: flex;
+}
+.side-bar label {
+  cursor: pointer;
+}
+
+.side-bar li .active1 {
+  text-decoration: none;
+  color: var(--main-color);
+  display: block;
+  padding: 20px 20px;
+  text-decoration: none;
+  font-weight: bolder;
+  display: flex;
+}
+
+.side-bar li :hover {
+  color: var(--main-color);
+  font-weight: bolder;
+}

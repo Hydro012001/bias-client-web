@@ -1,0 +1,36 @@
+$theme-colors: (
+  "primary": #79118d,
+  "secondary": #eebff8,
+  "success": #72d219,
+  "info": #e9e1ee,
+  "warning": #eeff00,
+  "danger": #e40c42,
+  "light": #ffffff,
+  "dark": #33032f,
+);
+$btn-border-width: none;
+$btn-border-radius: 0px;
+
+$utilities: (
+  "shadow": (
+    property: box-shadow,
+    class: shadow,
+    values: (
+      null: (
+        rgba(60, 64, 67, 0.3) 0px 1px 2px 0px,
+        rgba(60, 64, 67, 0.15) 0px 1px 3px 1px,
+      ),
+      sm: (
+        rgba(0, 0, 0, 0.19) 0px 10px 20px,
+        rgba(0, 0, 0, 0.23) 0px 6px 6px,
+      ),
+      lg: (
+        rgba(0, 0, 0, 0.3) 0px 19px 38px,
+        rgba(0, 0, 0, 0.22) 0px 15px 12px,
+      ),
+      none: none,
+    ),
+  ),
+);
+
+@import "~bootstrap/scss/bootstrap";

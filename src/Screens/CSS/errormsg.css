@@ -1,0 +1,17 @@
+.error-container {
+  position: absolute;
+  z-index: 1;
+  width: 85%;
+  height: 90vh;
+
+  float: right;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: aquamarine;
+}
+.error-content {
+  width: 400px;
+  height: 400px;
+  background-color: blueviolet;
+}

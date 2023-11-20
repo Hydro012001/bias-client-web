@@ -1,0 +1,192 @@
+.home-container {
+  background-color: var(--backgound-color);
+  height: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.home-header {
+  background-color: white;
+  height: 90vh;
+  width: 100%;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
+    rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.cover-photo {
+  width: 80%;
+  height: 50vh;
+  background-color: aquamarine;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.home-profile {
+  display: flex;
+  width: 70%;
+  height: 30vh;
+  align-items: center;
+  justify-content: space-between;
+}
+.home-profile p {
+  color: gray;
+}
+.image-profile-details {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+#bussiness-photo {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+.count {
+  display: flex;
+}
+.image {
+  width: 150px;
+  height: 150px;
+  background-color: wheat;
+  border-radius: 50%;
+  padding: 10px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+
+  align-items: center;
+}
+.porfile-button {
+  display: flex;
+  width: 300px;
+  justify-content: space-between;
+  height: 100%;
+  align-items: flex-end;
+  gap: 30px;
+}
+.pitch-business {
+  background-color: var(--main-color);
+  color: white;
+  width: 150px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
+    rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  font-weight: bold;
+  justify-content: center;
+  cursor: pointer;
+}
+.edit-profile {
+  background-color: var(--backgound-color);
+  color: var(--text-color);
+  width: 150px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
+    rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  font-weight: bold;
+  justify-content: center;
+  cursor: pointer;
+}
+.entrep-navbar {
+  position: absolute;
+  bottom: 0px;
+  width: 72%;
+}
+.entrep-navbar nav {
+  width: 50%;
+}
+.entrep-navbar ul {
+  display: flex;
+  gap: 40px;
+  list-style: none;
+  height: 50px;
+  align-items: center;
+}
+.entrep-navbar .navlink {
+  text-decoration: none;
+  color: var(--text-color);
+  width: auto;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: bolder;
+}
+.navlink label {
+  cursor: pointer;
+}
+.entrep-navbar .navlink:hover {
+  background-color: var(--second-color);
+  color: var(--main-color);
+  border-radius: 10px;
+}
+
+.entrep-navbar .activeNavlink {
+  color: var(--main-color);
+  text-decoration: none;
+  width: auto;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bolder;
+  border-bottom: 5px solid var(--main-color);
+}
+#camera-icon {
+  position: absolute;
+  padding: 10px;
+  right: 5px;
+  bottom: 2px;
+  background-color: var(--backgound-color);
+  border-radius: 50%;
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px,
+    rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+}
+#camera {
+  filter: drop-shadow(0px 0px 2px rgb(0, 0, 0));
+}
+#preview-img {
+  width: inherit;
+  height: inherit;
+  border-radius: inherit;
+}
+
+.uploadForm {
+  position: absolute;
+  z-index: 2;
+  height: 100vh;
+  width: 99vw;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  background-color: var(--backgound-color);
+}
+@media screen and (max-width: 600px) {
+  .home-header {
+    height: 100vh;
+  }
+  .home-profile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .cover-photo {
+    width: 100%;
+  }
+}
