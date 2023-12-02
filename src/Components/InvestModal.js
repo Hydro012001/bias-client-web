@@ -34,7 +34,7 @@ function InvestModal({
   // }
   const saveDepositeDatabase = (type, amount, email, date, paypalLog) => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/invest`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/invest`, {
         type: type,
         amount: amount,
         email: email,
@@ -71,7 +71,7 @@ function InvestModal({
 
   // const testing = () => {
   //   axios
-  //     .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/invest`, {
+  //     .post(`${process.env.REACT_APP_NETWORK_ADD}/invest`, {
   //       //  type: type,
   //       //  amount: amount,
   //       //  email: email,

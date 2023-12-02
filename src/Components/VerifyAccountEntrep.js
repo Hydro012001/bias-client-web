@@ -1,9 +1,10 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../Screens/CSS/verify.css";
 import { storage } from "./firebaseConfig";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Loader from "./loader";
 function VerifyAccountEntrep(props) {
   const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState("");
@@ -14,6 +15,8 @@ function VerifyAccountEntrep(props) {
   const fileInputRefID = useRef(null);
   const fileInputRefImage = useRef(null);
   const fileInputRefBack = useRef(null);
+  const [btnStatus, setBtnStatus] = useState(true);
+  const [showLoader, setShowLoader] = useState(false);
   const handelUploadImage = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -21,6 +24,13 @@ function VerifyAccountEntrep(props) {
       setSelectedImage({ imgUrl: imgurl, file: file });
     }
   };
+  useEffect(() => {
+    if (selectedImage && selectedIDBack && selectedIDFront && idType) {
+      setBtnStatus(false);
+    } else {
+      setBtnStatus(true);
+    }
+  }, [selectedImage, selectedIDFront, selectedIDBack, idType]);
   const handelUploadID = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -49,7 +59,8 @@ function VerifyAccountEntrep(props) {
     // console.log(selectedIDFront.file);
     // console.log(selectedImage.file);
     // console.log(selectedIDBack.file);
-
+    setBtnStatus(true);
+    setShowLoader(true);
     let listOfLink = [
       { type: "Front", fileSelect: selectedIDFront.file },
       { type: "User", fileSelect: selectedImage.file },
@@ -100,19 +111,22 @@ function VerifyAccountEntrep(props) {
         }
       }
       axios
-        .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/uploadVerify`, {
+        .post(`${process.env.REACT_APP_NETWORK_ADD}/uploadVerify`, {
           front: Front,
           back: Back,
           user: User,
           user_id: user_id,
-          date: formattedDate,
+
           idType: idType,
         })
         .then((res) => {
           if (res.data.status) {
             alert(res.data.message);
+            setBtnStatus(false);
+            setShowLoader(false);
           } else {
             alert(res.data.message);
+            setBtnStatus(false);
           }
         })
         .catch((error) => {
@@ -123,36 +137,87 @@ function VerifyAccountEntrep(props) {
     }
   };
   return (
-    <div className="verify-contianer">
-      <div className="verify-content">
-        <div className="verify-profile">
+    <div className="container-fluid mt-5 d-flex align-items-center justify-content-center">
+      <div className="shadow m-3 w-70">
+        <div className="d-flex flex-column justify-content-center align-items-center w-100   pt-3">
           {selectedImage ? (
-            <img src={selectedImage.imgUrl} id="pic" />
+            <img
+              src={selectedImage.imgUrl}
+              className=" border"
+              style={{ width: "15rem", height: "15rem" }}
+            />
           ) : (
             <img
               src="https://t3.ftcdn.net/jpg/03/46/83/96/360_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg"
-              id="pic"
+              style={{ width: "15rem", height: "15rem" }}
+              className="rounded-circle border"
             />
           )}
-          <label>
+          <div class="mb-3 text-center">
+            <label for="formFileSm" class="fw-bold form-label">
+              2x2 Picture
+            </label>
+            <input
+              class="form-control form-control-sm"
+              id="formFileSm"
+              type="file"
+              accept="image/*"
+              onChange={handelUploadImage}
+            />
+          </div>
+          {/* <label>
             2x2 Picture: <button onClick={RefInputImage}>Upload </button>
           </label>
           <input
             type="file"
             accept="image/*"
-            onChange={handelUploadImage}
             style={{ display: "none" }}
             ref={fileInputRefImage}
-          />
+          /> */}
         </div>
-        <div className="verify-id">
-          <div className="front">
+        <div className="container w-75 mb-3">
+          <select
+            class="form-select"
+            aria-label="Default select example"
+            onChange={(e) => setIdType(e.target.value)}
+          >
+            <option selected>Select your ID type</option>
+            <option value="1">National ID</option>
+            <option value="2">Voter's ID</option>
+            <option value="2">Driver License</option>
+            <option value="2">NBI Clearance</option>
+            <option value="2">Police Clearance</option>
+            <option value="2">Barangay Clearance</option>
+          </select>
+        </div>
+        <div className="container d-flex  justify-content-center gap-5 align-items-center  ">
+          <div className="d-flex flex-column justify-content-center align-items-center ">
             {selectedIDFront ? (
-              <img src={selectedIDFront.imgUrl} />
+              <img
+                src={selectedIDFront.imgUrl}
+                style={{ width: "25rem", height: "15rem" }}
+                className=" border"
+              />
             ) : (
-              <img src="https://t3.ftcdn.net/jpg/03/46/83/96/360_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg" />
+              <img
+                src="https://t3.ftcdn.net/jpg/03/46/83/96/360_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg"
+                style={{ width: "25rem", height: "15rem" }}
+                className=" border"
+              />
             )}
-            <label>
+            <div class="mb-3 text-center">
+              <label for="formFileSm" class="fw-bold form-label">
+                Front ID
+              </label>
+              <input
+                class="form-control form-control-sm"
+                id="formFileSm"
+                type="file"
+                accept="image/*"
+                onChange={handelUploadID}
+              />
+            </div>
+            {/* <label>
               Front ID: <button onClick={RefInputId}>Upload</button>
             </label>
             <input
@@ -161,17 +226,36 @@ function VerifyAccountEntrep(props) {
               style={{ display: "none" }}
               onChange={handelUploadID}
               ref={fileInputRefID}
-            />
+            /> */}
           </div>
 
-          <div className="back">
+          <div className="d-flex flex-column justify-content-center align-items-center">
             {selectedIDBack ? (
-              <img src={selectedIDBack.imgUrl} />
+              <img
+                src={selectedIDBack.imgUrl}
+                style={{ width: "25rem", height: "15rem" }}
+                className=" border"
+              />
             ) : (
-              <img src="https://t3.ftcdn.net/jpg/03/46/83/96/360_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg" />
+              <img
+                src="https://t3.ftcdn.net/jpg/03/46/83/96/360_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg"
+                style={{ width: "25rem", height: "15rem" }}
+                className=" border"
+              />
             )}
-
-            <label>
+            <div class="mb-3 text-center">
+              <label for="formFileSm" class="fw-bold form-label">
+                Back ID
+              </label>
+              <input
+                class="form-control form-control-sm"
+                id="formFileSm"
+                type="file"
+                accept="image/*"
+                onChange={handelUploadIDBack}
+              />
+            </div>
+            {/* <label>
               Back ID: <button onClick={RefInputIdBack}>Upload</button>
             </label>
             <input
@@ -180,10 +264,27 @@ function VerifyAccountEntrep(props) {
               style={{ display: "none" }}
               onChange={handelUploadIDBack}
               ref={fileInputRefBack}
-            />
+            /> */}
           </div>
         </div>
-        <button onClick={handleSubmitVerfiyAccount}>Submit and Exit</button>
+        <div className="mb-3 d-flex align-items-center justify-content-center">
+          <button
+            onClick={handleSubmitVerfiyAccount}
+            type="button"
+            class="btn btn-primary rounded d-flex align-items-center justify-content-center gap-3"
+            disabled={btnStatus}
+          >
+            {showLoader ? (
+              <>
+                Uploading...
+                <Loader />
+              </>
+            ) : (
+              <> Submit</>
+            )}
+          </button>
+        </div>
+
         {/* <div className="verify-user-content">
           <div className="verify-user-pic-container">
             <h3>Person's Picture</h3>

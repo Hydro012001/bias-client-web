@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import "../Screens/CSS/navbar.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -26,21 +26,52 @@ import Offcanvas from "react-bootstrap/Offcanvas";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import NotificationInvestor from "../Screens/Investor/Notification";
+import ChatComponent from "../Screens/Chat/ChatComponent";
+import { decryptTextId } from "./EncryptIDs";
+// import io from "socket.io-client";
 
+// const socket = io("http://localhost:3007", {
+//   transports: ["websocket"],
+//   upgrade: false,
+//   query: {
+//     // Specify the origin of the application (either http://localhost:3000 or http://localhost:3001)
+//     origin: "http://localhost:3000",
+//     userId: localStorage.getItem("user_id"), // Replace with the actual origin of the client application
+//   },
+// });
 export default function NavbarInvestor() {
-  const navigationBarRef = useRef();
+  const auth = localStorage.getItem("auth");
   const user_id = localStorage.getItem("user_id");
   const [numberOfNotif, setNumberOfNotif] = useState([]);
   const [isNavigationBarOpen, setNavigationBarOpen] = useState(false);
   const [showRequest, setShowRequest] = useState(false);
   const userType = localStorage.getItem("userType");
+  const [showChatbot, setShowChatBot] = useState(false);
+  const [showOutlet, setShowOutlet] = useState(false);
+  const navigate = useNavigate();
   const handleShowSubMenu = () => {
     setShowRequest(!showRequest);
   };
 
   useEffect(() => {
+    try {
+      const authValue = decryptTextId(auth);
+      if (authValue !== "authorized") {
+        navigate("/login");
+        alert("You are not authrized in this page. Please go back to login");
+        setShowOutlet(false);
+      } else {
+        setShowOutlet(true);
+      }
+    } catch (error) {
+      navigate("/login");
+      alert("You are not authrized in this page. Please go back to login");
+    }
+  }, [auth]);
+
+  useEffect(() => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/getNotif`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/getNotif`, {
         user_id: user_id,
         notif_type: "investment",
       })
@@ -57,9 +88,10 @@ export default function NavbarInvestor() {
         alert(error);
       });
   }, [user_id]);
+
   // useEffect(() => {
   //   axios
-  //     .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/getNotif`, {
+  //     .post(`${process.env.REACT_APP_NETWORK_ADD}/getNotif`, {
   //       user_id: user_id,
   //     })
   //     .then((res) => {
@@ -78,6 +110,11 @@ export default function NavbarInvestor() {
       return number;
     }
   };
+
+  const handleShowChatbot = () => {
+    setShowChatBot(!showChatbot);
+  };
+
   return (
     <>
       <Navbar
@@ -99,6 +136,22 @@ export default function NavbarInvestor() {
                 style={{ height: "30px" }}
               />
             </Navbar.Brand>
+            {/* <OverlayTrigger
+              trigger="click"
+              placement="bottom"
+              overlay={
+                <Popover id={`popover-positioned-left`}>
+                  <Popover.Body>
+                    <Chatbots />
+                  </Popover.Body>
+                </Popover>
+              }
+            >
+             
+            </OverlayTrigger> */}
+            <Button as={NavLink} to={"/investor/chat"}>
+              <FontAwesomeIcon icon={faMessage} size="lg" />
+            </Button>
             <OverlayTrigger
               trigger="click"
               placement="bottom"
@@ -140,7 +193,7 @@ export default function NavbarInvestor() {
               <Nav.Link as={NavLink} to={"account/investment"}>
                 Investment{" "}
               </Nav.Link>
-              <Nav.Link as={NavLink} to={"profile/investment"}>
+              <Nav.Link as={NavLink} to={"account/profile"}>
                 Profile{" "}
               </Nav.Link>
               <Nav.Link
@@ -179,8 +232,7 @@ export default function NavbarInvestor() {
           </Navbar.Collapse>
         </Container>
       </Navbar>
-
-      <Outlet />
+      {showOutlet ? <Outlet /> : ""}
     </>
   );
 }

@@ -6,7 +6,7 @@ export default function Transaction() {
   const user_id = localStorage.getItem("user_id");
   const [data, setData] = useState([]);
   axios
-    .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/transactions`, {
+    .post(`${process.env.REACT_APP_NETWORK_ADD}/transactions`, {
       user_id: user_id,
     })
     .then((res) => setData(res.data.result))

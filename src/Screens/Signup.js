@@ -55,7 +55,7 @@ export default function Signup() {
       setAlertType("danger");
     } else {
       if (password === conPass) {
-        Axios.post(`${process.env.REACT_APP_NETWORK_ADD}:3006/createaccount`, {
+        Axios.post(`${process.env.REACT_APP_NETWORK_ADD}/createaccount`, {
           usertype: usertype,
           firstname: firstname,
           lastname: lastname,
@@ -96,7 +96,7 @@ export default function Signup() {
   };
 
   return (
-    <>
+    <div className="contianer">
       <ToastContainer position="top-center" className="p-3">
         <Toast
           className="d-inline-block m-1"
@@ -109,141 +109,171 @@ export default function Signup() {
           <Toast.Body className="primary text-light">{alertMsg}</Toast.Body>
         </Toast>
       </ToastContainer>
-      <div className="contianer-fluid row">
-        <div className="col text-center ">
+      <div className="d-flex flex-wrap w-100 align-items-center justify-content-center">
+        <div className="text-center ">
           <img
             src={signupIcons}
             alt="Welcome"
-            style={{ width: "55%", height: "38rem" }}
+            style={{ height: "38rem" }}
+            className="w-50"
           />
         </div>
         <div
-          className="row align-items-center col-6 justify-content-center overflow-y-scroll"
+          className="w-50 align-items-center  justify-content-center overflow-auto"
           style={{ height: "90vh" }}
         >
-          <div className="row align-items-center justify-content-center ">
-            <h1 className="text-center mt-4 mb-5">Registration Form</h1>
-            <br /> <br />
-            <div>
-              <div className="personal">
-                <h4>Account Information</h4>
-                <label>What is your rule? </label>
-                <select
-                  onChange={(e) => settingTypeofUser(e.target.value)}
-                  className="form-select"
-                  aria-label="Default select example"
-                >
-                  <option value="">Select rule :</option>
-                  <option value="entrepreneur">Entreprenuer</option>
-                  <option value="investor">Investor</option>
-                </select>
+          <h1 className="text-center mt-4 mb-5">Registration Form</h1>
 
-                <div className="mb-3">
-                  <label className="form-label">Email</label>
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="form-control"
-                  />
-                  <div className=" mt-3">
-                    <label className="form-label">Password</label>
-                    <input
-                      type="password"
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="form-control"
-                    />
-                    <PasswordStrengthBar
-                      password={password}
-                      onChangeScore={(number, feedback) => {
-                        setPassStrength(number);
-                      }}
-                      className="mt-3"
-                    />
-                  </div>
+          <div className="personal">
+            <h4>Account Information</h4>
+            <label>What is your rule? </label>
+            <select
+              onChange={(e) => settingTypeofUser(e.target.value)}
+              className="form-select"
+              aria-label="Default select example"
+            >
+              <option value="">Select rule :</option>
+              <option value="entrepreneur">Entreprenuer</option>
+              <option value="investor">Investor</option>
+            </select>
 
-                  <label className="form-label">Confirm Password</label>
+            <div className="mb-3 mt-3">
+              <div class="form-floating mb-3">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="floatingInput"
+                  placeholder="name@example.com"
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <label for="floatingInput">Email address</label>
+              </div>
+
+              <div className=" mt-3">
+                <div class="form-floating">
                   <input
                     type="password"
-                    onChange={(e) => setConPass(e.target.value)}
-                    className="form-control"
+                    class="form-control"
+                    id="floatingPassword"
+                    placeholder="Password"
+                    onChange={(e) => setPassword(e.target.value)}
                   />
+                  <label for="floatingPassword">Password</label>
                 </div>
-                <div className="mb-3 ">
-                  <h4>Personal Information</h4>
-                  <label className="form-label">First Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g John"
-                    onChange={(e) => setFirstname(e.target.value)}
-                    className="form-control"
-                  />
-                  <label className="form-label">Middle Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g Reyes"
-                    onChange={(e) => setMiddleName(e.target.value)}
-                    className="form-control"
-                  />
-                  <label className="form-label">Last name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g Dela Cruz"
-                    onChange={(e) => setLastname(e.target.value)}
-                    className="form-control"
-                  />
-                  <label className="form-label">Date of Birth</label>
-                  <input
-                    type="date"
-                    placeholder="Birthday"
-                    onChange={(e) => {
-                      setBirthday(e.target.value);
-                      handleSetAge(e.target.value);
-                    }}
-                    className="form-control"
-                  />
-                  <label className="form-label">Age</label>
-                  <input
-                    type="text"
-                    placeholder="Age"
-                    value={userage}
-                    className="form-control"
-                    readOnly
-                  />
-                  <label>Select you gender: </label>
-                  <select
-                    name="gender"
-                    onChange={(e) => setGender(e.target.value)}
-                    className="form-select"
-                    aria-label="Default select example"
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="unknown">Prefer not to say</option>
-                  </select>
-
-                  <label className="form-label">Phone Number</label>
-                  <input
-                    type="text"
-                    placeholder="Cellphone Number"
-                    onChange={(e) => setPhonum(e.target.value)}
-                    className="form-control"
-                  />
+                <PasswordStrengthBar
+                  password={password}
+                  onChangeScore={(number, feedback) => {
+                    setPassStrength(number);
+                  }}
+                  className="mt-3"
+                />{" "}
+                <div id="passwordHelpBlock" class="form-text">
+                  Your password must be 8-20 characters long, contain letters
+                  and numbers, and must not contain spaces, special characters,
+                  or emoji.
                 </div>
               </div>
-              <h4>Address Information</h4>
 
-              <br />
-              <Address addressData={setAddress} />
-              <br />
-              <div className="text-center">
-                <button
-                  onClick={() => createAcount()}
-                  className="btn btn-primary btn-lg col-10"
-                >
-                  Signup
-                </button>
+              <div class="form-floating">
+                <input
+                  type="password"
+                  class="form-control"
+                  id="floatingPassword"
+                  placeholder="Password"
+                  onChange={(e) => setConPass(e.target.value)}
+                />
+                <label for="floatingInput">Confirm Password</label>
               </div>
+            </div>
+            <div className="mb-3 ">
+              <h4>Personal Information</h4>
+              <div class="form-floating mb-3">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="floatingInput"
+                  placeholder="name@example.com"
+                  onChange={(e) => setFirstname(e.target.value)}
+                />
+                <label for="floatingInput">First Name</label>
+              </div>
+              <div class="form-floating mb-3">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="floatingInput"
+                  placeholder="name@example.com"
+                  onChange={(e) => setMiddleName(e.target.value)}
+                />
+                <label for="floatingInput">Middle Name</label>
+              </div>
+              <div class="form-floating mb-3">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="floatingInput"
+                  placeholder="name@example.com"
+                  onChange={(e) => setLastname(e.target.value)}
+                />
+                <label for="floatingInput">Last name</label>
+              </div>
+              <label className="form-label">Date of Birth</label>
+              <input
+                type="date"
+                placeholder="Birthday"
+                onChange={(e) => {
+                  setBirthday(e.target.value);
+                  handleSetAge(e.target.value);
+                }}
+                className="form-control"
+              />
+              <div class="form-floating mb-3 mt-3">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="floatingInput"
+                  placeholder="name@example.com"
+                  value={userage}
+                  readOnly
+                />
+                <label for="floatingInput">Age</label>
+              </div>
+
+              <label>Select you gender: </label>
+              <select
+                name="gender"
+                onChange={(e) => setGender(e.target.value)}
+                className="form-select"
+                aria-label="Default select example"
+              >
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="unknown">Prefer not to say</option>
+              </select>
+
+              <div class="form-floating mb-3 mt-3">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="floatingInput"
+                  placeholder="name@example.com"
+                  onChange={(e) => setPhonum(e.target.value)}
+                />
+                <label for="floatingInput">Phone Number</label>
+              </div>
+            </div>
+            <h4>Address Information</h4>
+
+            <br />
+            <Address addressData={setAddress} />
+            <br />
+            <div className="text-center">
+              <button
+                onClick={() => createAcount()}
+                className="btn btn-primary btn-lg col-10"
+              >
+                Signup
+              </button>
             </div>
             <p className="text-center">
               Already have an account? Click <a href="/login">Login</a>
@@ -251,6 +281,6 @@ export default function Signup() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

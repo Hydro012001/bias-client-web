@@ -1,51 +1,34 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import "../Screens/CSS/navbar.css";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
-import NavDropdown from "react-bootstrap/NavDropdown";
+
 import axios from "axios";
 import logoIcon from "../icons/logo.jpg";
 
 import "../Screens/CSS/navbar.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faMoneyBillTrendUp,
-  faWallet,
-  faPager,
-  faChartLine,
-  faMessage,
-  faUser,
-  faBell,
-  faBars,
-  faRightFromBracket,
-  faChevronDown,
-} from "@fortawesome/free-solid-svg-icons";
+import { faBell, faMessage } from "@fortawesome/free-solid-svg-icons";
 
-import { Button, Badge } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 
-import Form from "react-bootstrap/Form";
-
-import Offcanvas from "react-bootstrap/Offcanvas";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import NotificationEntrep from "../Screens/Entrepreneur/NotificationEntrep";
 
 export default function NavbarEntrep() {
-  const navigationBarRef = useRef();
   const navigate = useNavigate();
   const [numberOfNotif, setNumberOfNotif] = useState([]);
-  const [isNavigationBarOpen, setNavigationBarOpen] = useState(false);
+  // const [isNavigationBarOpen, setNavigationBarOpen] = useState(false);
   const userType = localStorage.getItem("userType");
-  const handleShowNavigationBar = () => {
-    setNavigationBarOpen((prevState) => !prevState);
-  };
+
   const [showRequest, setShowRequest] = useState(false);
-  const handleShowSubMenu = () => {
-    setShowRequest(!showRequest);
-  };
+  // const handleShowSubMenu = () => {
+  //   setShowRequest(!showRequest);
+  // };
 
   const user_id = localStorage.getItem("user_id");
   useEffect(() => {
@@ -57,7 +40,7 @@ export default function NavbarEntrep() {
   useEffect(() => {
     if (userType === "investor") {
       axios
-        .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/getNotif`, {
+        .post(`${process.env.REACT_APP_NETWORK_ADD}/getNotif`, {
           user_id: user_id,
           notif_type: "investment",
         })
@@ -77,7 +60,7 @@ export default function NavbarEntrep() {
     } else if (userType === "entrepreneur") {
       {
         axios
-          .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/getNotif`, {
+          .post(`${process.env.REACT_APP_NETWORK_ADD}/getNotif`, {
             user_id: user_id,
             notif_type: "business",
           })
@@ -124,6 +107,9 @@ export default function NavbarEntrep() {
                 style={{ height: "30px " }}
               />
             </Navbar.Brand>
+            <Button as={NavLink} to={"account/chat"}>
+              <FontAwesomeIcon icon={faMessage} size="lg" />
+            </Button>
             <OverlayTrigger
               trigger="click"
               placement="bottom"
@@ -163,9 +149,6 @@ export default function NavbarEntrep() {
               </Nav.Link>{" "}
               <Nav.Link as={NavLink} to={"account/business"}>
                 Business{" "}
-              </Nav.Link>{" "}
-              <Nav.Link as={NavLink} to={"account/chat"}>
-                Chat{" "}
               </Nav.Link>{" "}
               <Nav.Link
                 as={NavLink}

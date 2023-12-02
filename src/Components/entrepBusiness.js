@@ -21,7 +21,7 @@ export default function ViewBusiness() {
     } else {
       axios
         .post(
-          `${process.env.REACT_APP_NETWORK_ADD}:3006/api/viewBusinessInvestors`,
+          `${process.env.REACT_APP_NETWORK_ADD}/api/viewBusinessInvestors`,
           {
             businessId: businessId,
           }
@@ -46,7 +46,7 @@ export default function ViewBusiness() {
 
   const chatInvestor = (e) => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/api/create-chat-room`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/api/create-chat-room`, {
         user_id: user_id,
         recieverId: e,
       })
@@ -69,7 +69,7 @@ export default function ViewBusiness() {
   const handleAcceptInvestment = (invest_id) => {
     const status = "Accept";
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/acceptInvetment`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/acceptInvetment`, {
         invest_id: invest_id,
         status: status,
       })
@@ -130,13 +130,10 @@ export default function ViewBusiness() {
 
     console.log(invst_id);
     axios
-      .post(
-        `${process.env.REACT_APP_NETWORK_ADD}:3006/api/UpdateBusinessStart`,
-        {
-          businessId: businessId,
-          invst_id: invst_id,
-        }
-      )
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/api/UpdateBusinessStart`, {
+        businessId: businessId,
+        invst_id: invst_id,
+      })
       .then((res) => {
         if (res.data.status) {
           alert("Udpated ");

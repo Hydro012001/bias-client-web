@@ -12,7 +12,7 @@ function WithdrawalModal({ showWithdrawal, balance }) {
 
   const handleWithdrawRequest = () => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/withdraw`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}:/withdraw`, {
         amount: amtWith,
         type: "Withdraw",
         email: email,

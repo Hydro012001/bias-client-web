@@ -4,7 +4,7 @@ function AccumalatedAmt({ buss_id }) {
   const [accumaltedAmt, setAccumaltedAmt] = useState(null);
   useEffect(() => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/api/getAccumulatedAmt`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/api/getAccumulatedAmt`, {
         buss_id: buss_id,
       })
       .then((res) => {

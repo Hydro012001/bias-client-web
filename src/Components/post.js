@@ -7,7 +7,17 @@ import logoIcon from "../icons/logo.jpg";
 import CalendarComponent from "./datesofpayments";
 import { NavLink, useNavigate } from "react-router-dom";
 import { encryptId } from "./Encryptor";
-import { Button, Toast, ToastContainer, Accordion } from "react-bootstrap";
+import {
+  Button,
+  Toast,
+  ToastContainer,
+  Accordion,
+  Navbar,
+  Container,
+  Dropdown,
+  Nav,
+  Form,
+} from "react-bootstrap";
 import Pitch from "./pitch";
 import ErrorMsg from "./ErrorMsg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -20,6 +30,7 @@ import keyword_extractor from "keyword-extractor";
 import { formatDateToCustomString } from "../Utils/Compute";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "./firebaseConfig";
+import { encrypTextId } from "./EncryptIDs";
 export default function Post() {
   const user_id = localStorage.getItem("user_id");
   const [bussinessDisplay, setBussinesDisplay] = useState([]);
@@ -34,7 +45,7 @@ export default function Post() {
   const [uploadBtnStatus, setUploadBtnStatus] = useState(false);
   useEffect(() => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/business`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/business`, {
         user_id: user_id,
       })
       .then((res) => {
@@ -51,7 +62,7 @@ export default function Post() {
 
   // const handleShowPitchBusiness = () => {
   //   axios
-  //     .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/checkUserStatus`, {
+  //     .post(`${process.env.REACT_APP_NETWORK_ADD}/checkUserStatus`, {
   //       user_id: user_id,
   //     })
   //     .then((res) => {
@@ -64,11 +75,27 @@ export default function Post() {
   // };
 
   const handleShowPitchBusiness = () => {
-    setShowPitchBusiness(!showPitchBusiness);
+    axios
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/userstatus`, {
+        user_id,
+      })
+      .then((res) => {
+        if (res.data.status) {
+          setShowPitchBusiness(!showPitchBusiness);
+        } else {
+          setShowAlert(true);
+          setAlertType("danger");
+          setErrorMsg(res.data.message);
+        }
+      })
+      .catch((error) => {
+        setShowAlert(true);
+        setAlertType("danger");
+        setErrorMsg(error.message);
+      });
   };
 
   const filterBusinessUseFundsStatus = (useFunds, businesSendFunds) => {
-    console.log(businesSendFunds);
     const InitialsendBusinessFundsData = businesSendFunds;
     const dataSendBusinessFunds = InitialsendBusinessFundsData.map(
       (item) => item
@@ -91,7 +118,8 @@ export default function Post() {
         return { ...item, status: "not send" };
       }
     });
-    console.log(dataSendBusinessFunds);
+
+    console.log(filterUseFunds);
     return filterUseFunds;
   };
 
@@ -112,7 +140,7 @@ export default function Post() {
   const handleUpdateBusinessFundsStatus = (useFundsId) => {
     setBtnStatus(true);
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/updatesUseFunds`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/updatesUseFunds`, {
         id: useFundsId,
       })
       .then((res) => {
@@ -149,7 +177,7 @@ export default function Post() {
     const urlDowloand = await getDownloadURL(snapshot.ref);
 
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/uplaodreceipt`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/uplaodreceipt`, {
         id: id,
         url: urlDowloand,
         status: "pending",
@@ -244,7 +272,10 @@ export default function Post() {
         <Toast
           className="d-inline-block m-1"
           bg={alertType}
-          onClose={() => setShowAlert(false)}
+          onClose={() => {
+            setShowAlert(false);
+            window.location.reload();
+          }}
           show={showAlert}
           delay={3000}
           autohide
@@ -263,15 +294,71 @@ export default function Post() {
       ) : (
         ""
       )}
-      <div className="pt-5 d-flex justify-content-end me-5 ">
-        <button
-          type="button"
-          class="btn btn-primary gap-2 d-flex align-items-center justify-content-center"
-          onClick={() => handleShowPitchBusiness()}
-        >
-          <FontAwesomeIcon icon={faCirclePlus} />
-          Pitch
-        </button>
+      <div className=" d-flex w-100 justify-content-evenly me-5 mb-3">
+        <Navbar collapseOnSelect expand="lg" className="bg-body-tertiary w-100">
+          <Container fluid>
+            <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+            <Navbar.Collapse id="responsive-navbar-nav">
+              <Nav className="me-auto d-flex gap-2">
+                <Dropdown>
+                  <Dropdown.Toggle variant="primary" id="dropdown-basic">
+                    Type
+                  </Dropdown.Toggle>
+
+                  <Dropdown.Menu>
+                    <Dropdown.Item href="#/action-1">All</Dropdown.Item>
+                    <Dropdown.Item href="#/action-2">Request</Dropdown.Item>
+                    <Dropdown.Item href="#/action-3">Approved</Dropdown.Item>
+                    <Dropdown.Item href="#/action-3"> Complete</Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+                <Dropdown>
+                  <Dropdown.Toggle variant="primary" id="dropdown-basic">
+                    Business Category
+                  </Dropdown.Toggle>
+
+                  <Dropdown.Menu>
+                    <Dropdown.Item href="#/action-1">Retail</Dropdown.Item>
+                    <Dropdown.Item href="#/action-2">
+                      Food and Beverage
+                    </Dropdown.Item>
+                    <Dropdown.Item href="#/action-3"> E-commerce</Dropdown.Item>
+                    <Dropdown.Item href="#/action-3">
+                      {" "}
+                      E-commerce Street Vendors
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              </Nav>
+              <Form className="d-flex align-items-center gap-2">
+                <label className="w-50">Start Date</label>
+                <Form.Control
+                  type="date"
+                  placeholder="Search"
+                  className="me-2"
+                  aria-label="Search"
+                />
+              </Form>
+              <Form className="d-flex align-items-center gap-2">
+                <label className="w-50">End Date</label>
+                <Form.Control
+                  type="date"
+                  placeholder="Search"
+                  className="me-2"
+                  aria-label="Search"
+                />
+              </Form>
+              <button
+                type="button"
+                class="btn btn-primary gap-2 d-flex align-items-center justify-content-center"
+                onClick={() => handleShowPitchBusiness()}
+              >
+                <FontAwesomeIcon icon={faCirclePlus} />
+                Pitch
+              </button>
+            </Navbar.Collapse>
+          </Container>
+        </Navbar>
       </div>
 
       <div className=" d-flex flex-column mb-4">
@@ -355,9 +442,13 @@ export default function Post() {
                             <span className="border p-2 ">
                               {item.buss_type}
                             </span>
-                            <span className="border p-2 ">
-                              {item.buss_type_name}
-                            </span>
+                            {JSON.parse(item.buss_type_name).map(
+                              (data, index) => (
+                                <span className="border p-2 " key={index}>
+                                  {data}
+                                </span>
+                              )
+                            )}
                           </div>
                         </div>
                         <div>
@@ -382,14 +473,22 @@ export default function Post() {
                           <label className="form-label fw-bold">
                             Payments Date
                           </label>
-                          <Button
-                            as={NavLink}
-                            to={`payments?buss_id=${item.buss_id}&pay_type=payments`}
-                            className="rounded"
-                            variant="primary"
-                          >
-                            View Payments
-                          </Button>
+                          {item.buss_status === "start" ? (
+                            <>
+                              <Button
+                                as={NavLink}
+                                to={`payments?buss_id=${item.buss_id}&pay_type=payments`}
+                                className="rounded"
+                                variant="primary"
+                              >
+                                View Payments
+                              </Button>
+                            </>
+                          ) : (
+                            <label className="fw-bold text-danger">
+                              Waiting for the funds to be sends
+                            </label>
+                          )}
                         </span>
 
                         <table class=" table align-middle text-center mb-0 bg-white mt-2">
@@ -574,6 +673,13 @@ export default function Post() {
                                         Upload
                                       </button>
                                     </div>
+                                  ) : item.bussFunds_amount_recieve_status ===
+                                      "recieve" &&
+                                    item.status === "send" &&
+                                    item.bussFunds_reciept &&
+                                    item.bussFunds_reciept_status ===
+                                      "pending" ? (
+                                    "Waiting your reciept to be approve"
                                   ) : (
                                     ""
                                   )}

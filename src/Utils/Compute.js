@@ -61,12 +61,15 @@ export function formatDateToCustomString(date) {
 //   )} - ${formatDateToCustomString(new Date(endDate))}`;
 // }
 
-export function computeDateStart(startDate, todayDate) {
-  console.log(startDate);
+export function computeDateStart(startDate, todayDate, endDate) {
   if (startDate === todayDate) {
     return "Started Today";
   } else if (startDate < todayDate) {
-    return "Investments is started";
+    if (todayDate >= endDate) {
+      return "Investment is ready to be claim";
+    } else {
+      return "Investments is started";
+    }
   } else if (startDate > todayDate) {
     return (
       <label>
@@ -80,3 +83,49 @@ export function computeDateStart(startDate, todayDate) {
     return "Nothign";
   }
 }
+
+export function calculateUserStatus(status) {
+  if (status === "basic") {
+    return 0;
+  } else if (status === "verified") {
+    return 100;
+  }
+}
+
+export function displayBusinessStation(stationname) {
+  try {
+    return JSON.parse(stationname).map((item) => (
+      <span
+        className="border p-2 hover"
+        title={`${item.address ? item.address : ""}`}
+        style={{ cursor: "pointer" }}
+      >
+        {item.name}
+      </span>
+    ));
+  } catch (error) {
+    return (
+      <span className="border p-2 hover" style={{ cursor: "pointer" }}>
+        {stationname}
+      </span>
+    );
+  }
+}
+
+// export function removeDuplicateBussID(array) {
+//   const seenIds = {};
+//   const duplicates = [];
+//   const uniqueItems = [];
+//   for (const item of array) {
+//     const id = item.buss_id;
+
+//     if (seenIds[id]) {
+//       duplicates.push(id);
+//     } else {
+//       seenIds[id] = true;
+//       uniqueItems.push(item);
+//     }
+//   }
+
+//   return uniqueItems;
+// }

@@ -13,6 +13,7 @@ export default function Payreturn({
   installmentId,
   handleShow,
   buss_id,
+  installmentLength,
 }) {
   const user_id = localStorage.getItem("user_id");
 
@@ -34,7 +35,7 @@ export default function Payreturn({
   // // const todayDate = new Date();
   // useEffect(() => {
   //   axios
-  //     .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/returnHistory`, {
+  //     .post(`${process.env.REACT_APP_NETWORK_ADD}/returnHistory`, {
   //       user_id: user_id,
   //       invst_id: invst_id,
   //     })
@@ -48,7 +49,7 @@ export default function Payreturn({
 
   // useEffect(() => {
   //   axios
-  //     .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/investmentdetails`, {
+  //     .post(`${process.env.REACT_APP_NETWORK_ADD}/investmentdetails`, {
   //       user_id: user_id,
   //       invst_id: invst_id,
   //     })
@@ -97,7 +98,7 @@ export default function Payreturn({
   //   //     console.log(new Date(todayDate).toDateString());
   //   //     axios
   //   //       .post(
-  //   //         `${process.env.REACT_APP_NETWORK_ADD}:3006/checkInstallmentPayment`,
+  //   //         `${process.env.REACT_APP_NETWORK_ADD}/checkInstallmentPayment`,
   //   //         {
   //   //           intll_id: listReturns.instll_id,
   //   //           date: item.date,
@@ -124,7 +125,7 @@ export default function Payreturn({
   // const handleReturnPayment = () => {
   //   // console.log(install_id);
   //   // axios
-  //   //   .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/returnProfit`, {
+  //   //   .post(`${process.env.REACT_APP_NETWORK_ADD}/returnProfit`, {
   //   //     amout: todayPaymentAmt,
   //   //     date: todayPayementDate,
   //   //     install_id: install_id,
@@ -151,7 +152,7 @@ export default function Payreturn({
 
   const handlePayReturnLoan = (email, date, paypalDataLog) => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/payretunrloan`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/payretunrloan`, {
         amount: amount,
         email: email,
         date: date,
@@ -159,10 +160,12 @@ export default function Payreturn({
         user_id: user_id,
         installmentId,
         buss_id,
+        installmentLength,
       })
       .then((res) => {
         if (res.data.status) {
           alert(res.data.message);
+          window.location.reload();
         } else {
           alert(res.data.message);
         }
@@ -283,8 +286,8 @@ export default function Payreturn({
             onApprove={async (data, actions) => {
               return await actions.order.capture().then((details) => {
                 handlePayReturnLoan(
-                  details.purchase_units[0].amount.value,
                   details.payer.email_address,
+
                   details.create_time,
                   JSON.stringify(details)
                 );

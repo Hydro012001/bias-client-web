@@ -3,15 +3,16 @@ import axios from "axios";
 
 import ListGroup from "react-bootstrap/ListGroup";
 import { Nav } from "react-bootstrap";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 export default function NotificationInvestor({ showNotifBar }) {
   const user_id = localStorage.getItem("user_id");
   const userType = localStorage.getItem("userType");
   const [notifList, setNotifList] = useState([]);
+  const navigate = useNavigate();
   useEffect(() => {
     if (userType === "investor") {
       axios
-        .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/getNotif`, {
+        .post(`${process.env.REACT_APP_NETWORK_ADD}/getNotif`, {
           user_id: user_id,
           notif_type: "investment",
         })
@@ -22,7 +23,7 @@ export default function NotificationInvestor({ showNotifBar }) {
               (a, b) =>
                 new Date(b.notif_created_at) - new Date(a.notif_created_at)
             );
-
+            console.log(sortedData);
             setNotifList(sortedData);
           }
         })
@@ -40,11 +41,13 @@ export default function NotificationInvestor({ showNotifBar }) {
 
   const handleReadNotif = (notifID) => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/updateNotifstatus`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/updateNotifstatus`, {
         notif_id: notifID,
       })
       .then((res) => {
         if (res.data.status) {
+          navigate("/investor/account/investment");
+          window.location.reload();
         } else {
         }
       })

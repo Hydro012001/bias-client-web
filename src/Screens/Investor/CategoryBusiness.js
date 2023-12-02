@@ -10,7 +10,7 @@ function CategoryBusiness(props) {
 
   useEffect(() => {
     axios
-      .get(`${process.env.REACT_APP_NETWORK_ADD}:3006/list`)
+      .get(`${process.env.REACT_APP_NETWORK_ADD}/list`)
       .then((res) => {
         if (res.data.success) {
           const data = res.data.result;

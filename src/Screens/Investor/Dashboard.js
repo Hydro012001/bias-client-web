@@ -1,6 +1,6 @@
 import "../CSS/investorDashboard.css";
 import userIcon from "../../icons/user-pic.jpg";
-import Calendar from "../../Components/Calendar";
+
 import Calendars from "../../Components/Calendar";
 export default function DashboardInvestor() {
   const abbreviateBalance = (balance) => {

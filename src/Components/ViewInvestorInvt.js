@@ -19,7 +19,7 @@ function ViewInvestorInvt(props) {
   const [InstllSum, setInstllSum] = useState(0);
   useEffect(() => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/api/view/investment`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/api/view/investment`, {
         invest_id: Id,
       })
       .then((res) => {
@@ -80,13 +80,10 @@ function ViewInvestorInvt(props) {
 
   const handleAcceptInvestment = (id) => {
     axios
-      .post(
-        `${process.env.REACT_APP_NETWORK_ADD}:3006/api/approvedInvestment`,
-        {
-          invst_id: id,
-          invst_status: "Approved",
-        }
-      )
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/api/approvedInvestment`, {
+        invst_id: id,
+        invst_status: "Approved",
+      })
       .then((res) => {
         if (res.data.status) {
           alert(res.data.message);

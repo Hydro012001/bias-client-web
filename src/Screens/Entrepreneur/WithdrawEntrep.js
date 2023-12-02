@@ -26,7 +26,7 @@ function WithdrawEntrep(props) {
 
   const handlePostWitdraw = () => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/withdraw`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/withdraw`, {
         amount: amtWith,
         type: "withdrawCapital",
         email: email,

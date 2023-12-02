@@ -16,15 +16,17 @@ import {
   handleSelectCategories,
   searchFilter,
 } from "../../Utils/categoriesAPI";
-import { ListGroup } from "react-bootstrap";
+import newIcon from "../../icons/newIcon.png";
+import { Button, ListGroup, Modal } from "react-bootstrap";
 import axios from "axios";
+import { businessLikes } from "../../Components/bussinesDetails";
 export default function Feeds() {
   const navigate = useNavigate();
   const { typeKey, category } = useParams();
   const [activeKey, setActiveKey] = useState("retail");
   const [clickedCode, setClickedCode] = useState([]);
   const [listBusiness, setListBusiness] = useState([]);
-  const user_id = localStorage.getItem("user_id");
+
   // useEffect(() => {
   //   navigate(`?category=${selectedItems.join(",")}`);
   // }, [selectedItems, navigate]);
@@ -81,6 +83,7 @@ export default function Feeds() {
       return value;
     }
   };
+
   return (
     <div className="mt-5 pt-3">
       <div className="d-flex flex-column float-start ps-3 pe-3 pt-2">
@@ -102,6 +105,34 @@ export default function Feeds() {
           >
             All
           </Nav.Link>
+          <Nav.Link
+            to={"list/new/category/all"}
+            eventKey={"new"}
+            as={NavLink}
+            className={`${getLinkClassName("new")} position-relative`}
+          >
+            New{" "}
+            <img
+              src={newIcon}
+              alt="..."
+              style={{
+                height: "1.5rem",
+                width: "1.5rem",
+                top: "0px",
+                left: "0px",
+              }}
+              className="position-absolute"
+            />
+          </Nav.Link>
+          <Nav.Link
+            to={"list/investee/category/all"}
+            eventKey={"investee"}
+            as={NavLink}
+            className={getLinkClassName("investee")}
+          >
+            Investee
+          </Nav.Link>
+
           <Nav.Link
             to={"list/retail/category/all"}
             eventKey={"retail"}
@@ -136,12 +167,12 @@ export default function Feeds() {
           </Nav.Link>
         </Nav>
 
-        <div className="d-flex flex-column row pt-3">
+        <div className="d-flex flex-column row pt-3 ">
           <label className="fw-bold mb-2 d-flex align-items-center gap-2">
             <FontAwesomeIcon icon={faFilter} />
             SEARCH FILTER
           </label>
-          <div className="ps-4">
+          <div className="ps-4 overflow-auto " style={{ height: "13rem" }}>
             <label style={{ fontWeight: "500" }}>By Category</label>
             {checkBoxsData ? (
               <div className="">
@@ -149,6 +180,7 @@ export default function Feeds() {
                   <Form.Check
                     type={"checkbox"}
                     id={item.code}
+                    key={index}
                     label={item.businessType}
                     style={{ fontSize: "14px" }}
                     value={item.businessType}

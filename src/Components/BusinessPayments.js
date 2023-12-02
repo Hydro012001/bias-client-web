@@ -6,12 +6,14 @@ import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import Payreturn from "./payreturn";
+import { decryptTextId, encrypTextId } from "./EncryptIDs";
 function BusinessPayments(props) {
   const location = useLocation();
   const [todayDate, setTodayDate] = useState();
-  // const todayDate = new Date();
+  const user_id = localStorage.getItem("user_id");
   const searchData = new URLSearchParams(location.search);
   const buss_id = searchData.get("buss_id");
+
   const paymentType = searchData.get("pay_type");
   const itemInstallId = searchData.get("installment_id");
   const [installmentsData, setInstallmentsData] = useState([]);
@@ -25,7 +27,7 @@ function BusinessPayments(props) {
   const [totalReyPayment, setTotalReyPayment] = useState(0);
   const [totalPaid, setTotalPaid] = useState(0);
   const [missedPayment, setMissedPayment] = useState([]);
-  console.log(itemInstallId);
+  console.log(buss_id);
   // const calculatePaymentStatus = (installmentData, returnData, todayDate) => {
   //   try {
   //     const totalReyPayment = installmentData.reduce(
@@ -78,31 +80,40 @@ function BusinessPayments(props) {
   // };
   useEffect(() => {
     axios
-      .post(
-        `${process.env.REACT_APP_NETWORK_ADD}:3006/viewBusinessInstallments`,
-        {
-          buss_id: buss_id,
-        }
-      )
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/viewBusinessInstallments`, {
+        buss_id: buss_id,
+        user_id,
+      })
       .then((res) => {
         if (res.data.status) {
-          console.log(res.data.installmentsDatas);
-          console.log(res.data.missedPayments);
-          console.log(res.data.todayPayment);
-          setTodayDate(res.data.currentDate);
+          console.log(buss_id);
+          const installdata = res.data.installmentsDatas;
+          installdata.sort((a, b) => {
+            if (a.status === "paid" && b.status !== "paid") {
+              return 1;
+            } else if (a.status !== "paid" && b.status == "paid") {
+              return -1;
+            } else {
+              return 0;
+            }
+          });
 
-          console.log(res.data.todayPayment);
+          //console.log(res.data.missedPayments);
+          //console.log(res.data.todayPayment);
+          setTodayDate(res.data.currentDate);
+          //  console.log(res.data.transresult);
           //Unpaid
-          setunpaidInstallment(res.data.installmentsDatas);
+          setunpaidInstallment(installdata);
           //Missed Payment
           setMissedPayment(res.data.missedPayments);
           // console.log(paymentStatus.missedPayments);
           //Total Reypayments
           setTotalReyPayment(res.data.totalReyPayment);
           //Todays payment
+          console.log(res.data.todayPayment);
           setTodaysPayment(res.data.todayPayment);
           //Transaction List
-          setTransactionList(res.data.returnData);
+          setTransactionList(res.data.transresult);
           //Total Paid
           setTotalPaid(res.data.totalPaidAmount);
           // const installmentData = JSON.parse(
@@ -178,25 +189,24 @@ function BusinessPayments(props) {
   };
 
   //Function for calculating the added intrest and for days passed
-  const handleComputeAddedInterest = (mindate, amount) => {
-    const timeDifference = new Date(todayDate) - new Date(mindate);
+  const handleComputeAddedInterest = (maxdate, amount) => {
+    const timeDifference = new Date(todayDate) - new Date(maxdate);
     const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-    const interest = amount * 0.03;
+    const interest = amount * 0.01;
     const interestAdded = interest * parseInt(daysDifference);
     const totalPayment = interestAdded + amount;
+
+    console.log(daysDifference);
     return { daysDifference, interestAdded, totalPayment };
   };
 
-  const handleSetValue = (mindate, amount, id, status) => {
+  const handleSetValue = (maxdate, amount, id, status) => {
     if (status === "not paid") {
       setAmount(amount);
       setinstallmentId(id);
       handleShow();
     } else if (status === "missed") {
-      const amt = handleComputeAddedInterest(
-        mindate,
-        amount
-      ).totalPayment.toFixed(2);
+      const amt = handleComputeAddedInterest(maxdate, amount).totalPayment;
       setAmount(amt);
       setinstallmentId(id);
       handleShow();
@@ -211,6 +221,7 @@ function BusinessPayments(props) {
           installmentId={installmentId}
           handleShow={handleShow}
           buss_id={buss_id}
+          installmentLength={unpaidInstallment.length}
         />
       ) : (
         ""
@@ -256,24 +267,26 @@ function BusinessPayments(props) {
           <span className="d-flex justify-content-between w-100 gap-5">
             <h3 class=" ">Repayment</h3>
             <h3 class="text-primary">
-              {totalReyPayment ? <>₱ {totalReyPayment}</> : ""}
+              {totalReyPayment ? <>₱ {totalReyPayment.toFixed(2)}</> : ""}
             </h3>
           </span>
           <hr />
           <span className="d-flex justify-content-between w-100 gap-5">
-            <label class=" ">Paid Amount</label>
+            <label class=" ">Paid Installment</label>
             <label class="fw-bold">
-              {totalPaid ? <>₱ {totalPaid}</> : "No Payment yet"}
+              {totalPaid ? <>₱ {totalPaid.toFixed(2)}</> : "No Payment yet"}
             </label>
           </span>
           <span className="d-flex justify-content-between w-100 gap-5">
-            <label class=" ">Remaining Amount</label>
-            <label class="fw-bold">₱ {totalReyPayment - totalPaid}</label>
+            <label class=" ">Remaining Installment</label>
+            <label class="fw-bold">
+              ₱ {(totalReyPayment - totalPaid).toFixed(2)}
+            </label>
           </span>
           <span className="d-flex justify-content-between w-100 gap-5">
-            <label class=" text-danger">Missed Payment Amount</label>
+            <label class=" text-danger">Missed Payment</label>
             <label class="fw-bold text-danger">
-              ₱ {caculateMissedPayments(missedPayment)}
+              ₱ {caculateMissedPayments(missedPayment).toFixed(2)}
             </label>
           </span>
         </span>
@@ -307,9 +320,23 @@ function BusinessPayments(props) {
                     <div className=" d-flex align-items-center justify-content-between">
                       <h4 class="card-title">₱ {todayPayment.installment}</h4>
 
-                      <a href="#" class="btn btn-primary">
+                      <Button
+                        variant="primary"
+                        //   as={NavLink}
+                        //   to={`approved?id=${item.buss_id}&user_id=${item.buss_user_id}`}
+                        role="button"
+                        className="rounded"
+                        onClick={() =>
+                          handleSetValue(
+                            todayPayment.maxdate,
+                            todayPayment.installment,
+                            todayPayment.id,
+                            todayPayment.status
+                          )
+                        }
+                      >
                         Pay Installment
-                      </a>
+                      </Button>
                     </div>
                   </div>
                 </>
@@ -353,153 +380,164 @@ function BusinessPayments(props) {
             </Card.Header>
             <Card.Body>
               {paymentType === "payments" ? (
-                <table class="table  ">
-                  <thead className="table-dark">
-                    <tr>
-                      <th>No.</th>
+                <div className="overflow-auto " style={{ height: "70vh" }}>
+                  {" "}
+                  <table class="table  ">
+                    <thead className="table-dark">
+                      <tr>
+                        <th>No.</th>
 
-                      <th>Amount</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unpaidInstallment.map((item, index) => (
-                      <tr key={index}>
-                        <td>
-                          <p class="fw-normal ">{index + 1}</p>
-                        </td>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {unpaidInstallment.map((item, index) => (
+                        <tr key={index}>
+                          <td>
+                            <p class="fw-normal ">{index + 1}</p>
+                          </td>
 
-                        <td>
-                          <p class="fw-normal ">
-                            ₱{" "}
-                            {item.status === "not paid" ? (
-                              <>{item.installment}</>
-                            ) : item.status === "missed" ? (
-                              <>
-                                {" "}
-                                {
-                                  handleComputeAddedInterest(
-                                    item.mindate,
+                          <td>
+                            <p class="fw-normal ">
+                              ₱{" "}
+                              {item.status === "not paid" ? (
+                                <>{item.installment.toFixed(2)}</>
+                              ) : item.status === "missed" ? (
+                                <>
+                                  {" "}
+                                  {handleComputeAddedInterest(
+                                    item.maxdate,
                                     item.installment
-                                  ).totalPayment
-                                }
+                                  ).totalPayment.toFixed(2)}
+                                </>
+                              ) : item.status === "paid" ? (
+                                <>{item.amount.toFixed(2)}</>
+                              ) : (
+                                ""
+                              )}
+                            </p>
+                          </td>
+                          <td>
+                            {todayPayment ? (
+                              <>
+                                {item.status === "not paid" &&
+                                todayPayment.mindate === item.mindate ? (
+                                  <span className="badge rounded-pill bg-success">
+                                    today's payment
+                                  </span>
+                                ) : (
+                                  <span
+                                    class={`badge rounded-pill  ${
+                                      item.status === "not paid"
+                                        ? "bg-danger text-light "
+                                        : item.status === "paid"
+                                        ? "bg-success text-dark"
+                                        : item.status === "missed"
+                                        ? "bg-warning  text-dark"
+                                        : ""
+                                    }`}
+                                  >
+                                    {" "}
+                                    {item.status}
+                                  </span>
+                                )}
                               </>
-                            ) : item.status === "paid" ? (
-                              <>{item.amount}</>
                             ) : (
                               ""
                             )}
-                          </p>
-                        </td>
-                        <td>
-                          <span
-                            class={`badge rounded-pill  ${
-                              item.status === "not paid"
-                                ? "bg-danger text-light "
-                                : item.status === "paid"
-                                ? "bg-success text-dark"
-                                : item.status === "missed"
-                                ? "bg-warning  text-dark"
-                                : ""
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
+                          </td>
 
-                        <td>
-                          <p class="fw-normal">
-                            {new Date(item.mindate).toDateString()} -{" "}
-                            {new Date(item.maxdate).toDateString()}
-                          </p>
-                        </td>
-                        <td>
-                          {item.status === "paid" ? (
-                            <FontAwesomeIcon
-                              icon={faCheck}
-                              style={{ color: "#00eb10" }}
-                            />
-                          ) : item.status === "not paid" ? (
-                            <Button
-                              variant="primary"
-                              //   as={NavLink}
-                              //   to={`approved?id=${item.buss_id}&user_id=${item.buss_user_id}`}
-                              role="button"
-                              className="rounded"
-                              onClick={() =>
-                                handleSetValue(
-                                  item.mindate,
-                                  item.installment,
-                                  item.id,
-                                  item.status
-                                )
-                              }
-                            >
-                              Pay
-                            </Button>
-                          ) : item.status === "missed" ? (
-                            <>
-                              {" "}
-                              <Button
-                                variant="primary"
-                                //   as={NavLink}
-                                //   to={`approved?id=${item.buss_id}&user_id=${item.buss_user_id}`}
-                                role="button"
-                                className="rounded"
-                                onClick={() =>
-                                  handleSetValue(
-                                    item.mindate,
-                                    item.installment,
-                                    item.id,
-                                    item.status
-                                  )
-                                }
-                              >
-                                Pay
-                              </Button>
-                              <Button
-                                variant="primary"
-                                //   as={NavLink}
-                                //   to={`approved?id=${item.buss_id}&user_id=${item.buss_user_id}`}
-                                role="button"
-                                className="rounded ms-2"
-                                as={NavLink}
-                                to={`?buss_id=10&pay_type=missed&installment_id=${item.id}`}
-                                // onClick={() =>
-                                //   handleSetValue(item.installment, item.id)
-                                // }
-                              >
-                                Details
-                              </Button>
-                            </>
-                          ) : (
-                            ""
-                          )}
-
-                          {/* {item.buss_status === "pending" ? (
-                  <Button
-                    variant="success"
-                    as={NavLink}
-                    to={`approved?id=${item.buss_id}&user_id=${item.buss_user_id}`}
-                    role="button"
-                  >
-                    Approved
-                  </Button>
-                ) : item.buss_status === "approved" ||
-                  item.buss_status === "start" ? (
-                  <Button variant="primary">View</Button>
-                ) : (
-                  ""
-                )} */}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <td>
+                            <p class="fw-normal">
+                              {new Date(item.mindate).toDateString()} -{" "}
+                              {new Date(item.maxdate).toDateString()}
+                            </p>
+                          </td>
+                          <td>
+                            {item.status === "paid" ? (
+                              <FontAwesomeIcon
+                                icon={faCheck}
+                                style={{ color: "#00eb10" }}
+                              />
+                            ) : item.status === "not paid" ? (
+                              <>
+                                {todayPayment ? (
+                                  <>
+                                    {todayPayment.mindate === item.mindate ? (
+                                      <Button
+                                        variant="primary"
+                                        //   as={NavLink}
+                                        //   to={`approved?id=${item.buss_id}&user_id=${item.buss_user_id}`}
+                                        role="button"
+                                        className="rounded"
+                                        onClick={() =>
+                                          handleSetValue(
+                                            item.maxdate,
+                                            item.installment,
+                                            item.id,
+                                            item.status
+                                          )
+                                        }
+                                      >
+                                        Pay
+                                      </Button>
+                                    ) : (
+                                      ""
+                                    )}
+                                  </>
+                                ) : (
+                                  ""
+                                )}
+                              </>
+                            ) : item.status === "missed" ? (
+                              <>
+                                {" "}
+                                <Button
+                                  variant="primary"
+                                  //   as={NavLink}
+                                  //   to={`approved?id=${item.buss_id}&user_id=${item.buss_user_id}`}
+                                  role="button"
+                                  className="rounded"
+                                  onClick={() =>
+                                    handleSetValue(
+                                      item.maxdate,
+                                      item.installment,
+                                      item.id,
+                                      item.status
+                                    )
+                                  }
+                                >
+                                  Pay
+                                </Button>
+                                <Button
+                                  variant="primary"
+                                  //   as={NavLink}
+                                  //   to={`approved?id=${item.buss_id}&user_id=${item.buss_user_id}`}
+                                  role="button"
+                                  className="rounded ms-2"
+                                  as={NavLink}
+                                  to={`?buss_id=${buss_id}&pay_type=missed&installment_id=${item.id}`}
+                                  // onClick={() =>
+                                  //   handleSetValue(item.installment, item.id)
+                                  // }
+                                >
+                                  Details
+                                </Button>
+                              </>
+                            ) : (
+                              ""
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : paymentType === "missed" ? (
-                <div>
+                <div className="overflow-auto " style={{ height: "70vh" }}>
                   <table class="table  text-center">
                     <thead className="table-dark">
                       <tr>
@@ -529,20 +567,23 @@ function BusinessPayments(props) {
                           </td>
                           <td>
                             {" "}
-                            <p class="fw-normal ">₱{item.data.installment}</p>
+                            <p class="fw-normal ">
+                              ₱{item.data.installment.toFixed(2)}
+                            </p>
                           </td>
 
                           <td>
                             {
                               handleComputeAddedInterest(
-                                item.data.mindate,
+                                item.data.maxdate,
                                 item.data.installment
                               ).daysDifference
                             }
                           </td>
                           <td>
+                            ₱{" "}
                             {handleComputeAddedInterest(
-                              item.data.mindate,
+                              item.data.maxdate,
                               item.data.installment
                             ).interestAdded.toFixed(2)}
                           </td>
@@ -550,7 +591,7 @@ function BusinessPayments(props) {
                             <p class="fw-normal ">
                               ₱{" "}
                               {handleComputeAddedInterest(
-                                item.data.mindate,
+                                item.data.maxdate,
                                 item.data.installment
                               ).totalPayment.toFixed(2)}
                             </p>
@@ -567,7 +608,18 @@ function BusinessPayments(props) {
                                   : ""
                               }`}
                             >
-                              {item.data.status}
+                              {todayPayment ? (
+                                <>
+                                  {item.data.status === "not paid" &&
+                                  todayPayment.mindate === item.data.mindate ? (
+                                    "today's payment"
+                                  ) : (
+                                    <> {item.data.status}</>
+                                  )}
+                                </>
+                              ) : (
+                                <>{item.data.status}</>
+                              )}
                             </span>
                           </td>
 
@@ -592,13 +644,15 @@ function BusinessPayments(props) {
                                 className="rounded"
                                 onClick={() =>
                                   handleSetValue(
-                                    item.data.mindate,
+                                    item.data.maxdate,
                                     item.data.installment,
-                                    item.data.id
+                                    item.data.id,
+                                    item.data.status
                                   )
                                 }
+                                style={{ fontSize: ".7rem" }}
                               >
-                                Pay
+                                Pay Missed
                               </Button>
                             )}
 
@@ -624,8 +678,86 @@ function BusinessPayments(props) {
                   </table>
                 </div>
               ) : paymentType === "paid" ? (
-                <div>
-                  <h1>Paid</h1>
+                <div className="overflow-auto " style={{ height: "70vh" }}>
+                  <table class="table  ">
+                    <thead className="table-dark">
+                      <tr>
+                        <th>No.</th>
+
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {unpaidInstallment.map((item, index) => (
+                        <tr key={index}>
+                          {item.status === "paid" ? (
+                            <>
+                              {" "}
+                              <td>
+                                <p class="fw-normal ">{index + 1}</p>
+                              </td>
+                              <td>
+                                <p class="fw-normal ">
+                                  ₱{" "}
+                                  {item.status === "not paid" ? (
+                                    <>{item.installment.toFixed(2)}</>
+                                  ) : item.status === "missed" ? (
+                                    <>
+                                      {" "}
+                                      {handleComputeAddedInterest(
+                                        item.maxdate,
+                                        item.installment
+                                      ).totalPayment.toFixed(2)}
+                                    </>
+                                  ) : item.status === "paid" ? (
+                                    <>{item.amount.toFixed(2)}</>
+                                  ) : (
+                                    ""
+                                  )}
+                                </p>
+                              </td>
+                              <td>
+                                <span
+                                  class={`badge rounded-pill  ${
+                                    item.status === "not paid"
+                                      ? "bg-danger text-light "
+                                      : item.status === "paid"
+                                      ? "bg-success text-dark"
+                                      : item.status === "missed"
+                                      ? "bg-warning  text-dark"
+                                      : ""
+                                  }`}
+                                >
+                                  {item.status}
+                                </span>
+                              </td>
+                              <td>
+                                <p class="fw-normal">
+                                  {new Date(item.mindate).toDateString()} -{" "}
+                                  {new Date(item.maxdate).toDateString()}
+                                </p>
+                              </td>
+                              <td>
+                                {item.status === "paid" ? (
+                                  <FontAwesomeIcon
+                                    icon={faCheck}
+                                    style={{ color: "#00eb10" }}
+                                  />
+                                ) : (
+                                  ""
+                                )}
+                              </td>
+                            </>
+                          ) : (
+                            ""
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
                 ""
@@ -635,12 +767,32 @@ function BusinessPayments(props) {
         </div>
 
         <div class="card w-25">
-          <div class="card-header">Transactions</div>
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item">An item</li>
-            <li class="list-group-item">A second item</li>
-            <li class="list-group-item">A third item</li>
-          </ul>
+          <div class="card-header ">Transactions</div>
+          <div className="overflow-auto " style={{ height: "70vh" }}>
+            {" "}
+            <table class="table mt-2 table align-middle text-center">
+              <thead className="table-dark">
+                <tr>
+                  <th scope="col">No.</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactionList.map((item, index) => (
+                  <tr key={index}>
+                    <td>{item.returnLoan_transac_id}</td>
+                    <td>₱ {item.returnLoan_amt.toFixed(2)}</td>
+                    <td>
+                      {new Date(
+                        item.returnLoan_created_at
+                      ).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

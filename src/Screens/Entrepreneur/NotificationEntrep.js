@@ -12,7 +12,7 @@ export default function NotificationEntrep({ showNotifBar }) {
     if (userType === "entrepreneur") {
       {
         axios
-          .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/getNotif`, {
+          .post(`${process.env.REACT_APP_NETWORK_ADD}/getNotif`, {
             user_id: user_id,
             notif_type: "business",
           })
@@ -42,7 +42,7 @@ export default function NotificationEntrep({ showNotifBar }) {
 
   const handleReadNotif = (notifID) => {
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/updateNotifstatus`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/updateNotifstatus`, {
         notif_id: notifID,
       })
       .then((res) => {

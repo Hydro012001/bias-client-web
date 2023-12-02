@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import logoIcon from "../../icons/logo.jpg";
 import axios from "axios";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { NavLink, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Loan } from "loanjs";
 import InvestModal from "../../Components/InvestModal";
 import { Toast, ToastContainer, Alert, Button } from "react-bootstrap";
 import { mapInvestorProfile } from "../../Utils/InvestorProfileMap";
+import { displayBusinessStation } from "../../Utils/Compute";
 function ViewBusinesInvestor(props) {
   const location = useLocation();
   const searchLocation = new URLSearchParams(location.search);
@@ -20,16 +21,14 @@ function ViewBusinesInvestor(props) {
   const [alertType, setAlertType] = useState("");
   const [alertStatus, setalertStatus] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [showNotVerified, setshowNotVerified] = useState(false);
 
   const navigate = useNavigate();
   useEffect(() => {
     axios
-      .post(
-        `${process.env.REACT_APP_NETWORK_ADD}:3006/api/viewentrepbusiness`,
-        {
-          buss_id: business,
-        }
-      )
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/api/viewentrepbusiness`, {
+        buss_id: business,
+      })
       .then((res) => {
         if (res.data.status) {
           console.log(res.data.result);
@@ -58,25 +57,33 @@ function ViewBusinesInvestor(props) {
 
   const handleShow = () => {
     axios
-      .post(
-        `${process.env.REACT_APP_NETWORK_ADD}:3006/getInvestHasInvestments`,
-        {
-          buss_id: business,
-          user_id: user_id,
-        }
-      )
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/getInvestHasInvestments`, {
+        buss_id: business,
+        user_id: user_id,
+      })
       .then((res) => {
         if (res.data.status) {
-          if (res.data.hasInvesment) {
-            setShowAlert(true);
+          if (res.data.userVerifid) {
+            if (res.data.hasInvesment) {
+              setShowAlert(true);
+            } else {
+              setShow(!show);
+            }
           } else {
-            setShow(!show);
+            setshowNotVerified(true);
+            setShowAlert(true);
           }
         } else {
           setAlertMsg(res.data.message);
           setalertStatus(true);
           setAlertType("danger");
+          setshowNotVerified(true);
         }
+      })
+      .catch((error) => {
+        setAlertMsg(error.message);
+        setalertStatus(true);
+        setAlertType("danger");
       });
   };
 
@@ -96,6 +103,24 @@ function ViewBusinesInvestor(props) {
   };
   return (
     <>
+      <ToastContainer position="top-center" className="p-3">
+        <Toast
+          className="d-inline-block m-1"
+          bg="danger"
+          show={showNotVerified}
+          delay={2000}
+          onClose={() => {
+            setshowNotVerified(false);
+            navigate("/investor/account/profile");
+          }}
+          autohide
+        >
+          <Toast.Body className="primary text-light">
+            You are not verified...Please verify your account first
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
+
       <ToastContainer position="top-center" className="p-3">
         <Toast
           className="d-inline-block m-1"
@@ -249,9 +274,10 @@ function ViewBusinesInvestor(props) {
                               <span className="border p-2 ">
                                 {item.buss_type}
                               </span>
-                              <span className="border p-2 ">
-                                {item.buss_type_name}
-                              </span>
+
+                              {JSON.parse(item.buss_type_name).map((data) => (
+                                <span className="border p-2 ">{data}</span>
+                              ))}
                             </div>
                           </div>
                           <div className="d-flex  mt-4 ms-4">
@@ -259,27 +285,6 @@ function ViewBusinesInvestor(props) {
                             <label className=" w-50 fs-6">
                               {item.buss_address}
                             </label>
-                          </div>
-
-                          <div className="d-flex mt-4 ms-4">
-                            <label className=" fw-bold w-50">
-                              High-traffic Area
-                            </label>
-                            <div className="d-flex flex-column">
-                              <label className="mb-2">
-                                {capitalizeFirstLetter(
-                                  item.buss_station.toUpperCase()
-                                )}
-                              </label>
-                              {item.buss_station_name ? (
-                                <label className=" fs-6">
-                                  {" "}
-                                  {item.buss_station_name}
-                                </label>
-                              ) : (
-                                ""
-                              )}
-                            </div>
                           </div>
 
                           {/* <div className="mt-3"></div>
@@ -305,16 +310,26 @@ function ViewBusinesInvestor(props) {
                         <div className="border border-start-0  border-top-0 border-bottom-0 col-4 d-flex">
                           <div className="text-center col">
                             <img
-                              src={item.buss_photo}
+                              src={
+                                item.buss_user_profile
+                                  ? item.buss_user_profile
+                                  : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
+                              }
                               alt="Business Logo"
-                              style={{ height: "5rem" }}
+                              style={{ height: "5rem", width: "5rem" }}
+                              className="rounded-circle"
                             />
                           </div>
-                          <span className="d-flex flex-column justify-content-end gap-2 col">
-                            <label>Arvel L. Francisco</label>
-                            <button type="button" class="btn btn-info w-50">
+                          <span className="d-flex flex-column  justify-content-center gap-2 ">
+                            <label>{`${item.entrep_fname} ${item.entrep_mname} ${item.entrep_lname}`}</label>
+                            <Button
+                              variant="primary"
+                              class="btn btn-primary w-50"
+                              as={NavLink}
+                              to={`/investor/entrep-details?entrep_id=${item.buss_user_id}`}
+                            >
                               Profile
-                            </button>
+                            </Button>{" "}
                           </span>
                         </div>
                         <div className="col">
@@ -345,6 +360,22 @@ function ViewBusinesInvestor(props) {
                         </div>
                       </div>
                       <div className="shadow row mt-4 col-11 mt-2  p-3">
+                        <div className="d-flex flex-column mt-4 mb-4">
+                          <label className="fs-5 bg-info d-flex align-items-center mb-3 ps-3 pt-2 pb-2">
+                            High-traffic Area
+                          </label>
+
+                          <div className="d-flex gap-2 flex-wrap w-100">
+                            {displayBusinessStation(item.buss_station_name)}
+                            {/* {JSON.parse(item.buss_station_name).map(
+                                (data) => (
+                                  <span className="border p-2 ">
+                                    {data.name}
+                                  </span>
+                                )
+                              )} */}
+                          </div>
+                        </div>
                         <div className="mb-4">
                           <label className="fs-5 bg-info d-flex align-items-center mb-3 ps-3 pt-2 pb-2">
                             Summary

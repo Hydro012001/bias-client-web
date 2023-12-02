@@ -22,6 +22,7 @@ import { decryptId } from "./Encryptor";
 import Modal from "react-bootstrap/Modal";
 import { Loan } from "loanjs";
 import { calculateAge, formatDateToCustomString } from "../Utils/Compute";
+import AutoCompleteAddress from "./AutoCompleteAddress";
 
 export default function Pitch({
   handleShowPitchBusiness,
@@ -35,6 +36,7 @@ export default function Pitch({
   const navigate = useNavigate();
   const [address, setAddress] = useState("");
   const bussilistType = bussinessTypes();
+  const [PaypalEmailAddress, setPaypalEmailAddres] = useState("");
   const [bussinessnameList, setbussinessnameList] = useState([]);
   //Working Usestate
   const [installments, setInstallments] = useState([]);
@@ -47,10 +49,11 @@ export default function Pitch({
   const [bussExperienceNo, setBussExpereinceNo] = useState(false);
   const [supportingDoc, setSupportingDoc] = useState("");
   const [permits, setPermits] = useState("");
+  const [proofOfResidence, setProofOfResdence] = useState("");
   const [textDisable, setTextDisble] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
-  const [bussLocationYes, setBussLocationYes] = useState(false);
-  const [bussLocationNo, setBussLocationNo] = useState(false);
+  const [hasbusinessBuild, sethasbusinessBuild] = useState(false);
+  // const [bussLocationNo, setBussLocationNo] = useState(false);
   const [targetAudience, setTargetAudience] = useState("");
   const [bussBuildingPlaceName, setbussBuildingPlaceName] = useState("");
   const [useFunds, setUseFunds] = useState([]);
@@ -59,6 +62,7 @@ export default function Pitch({
   const [prevBusinessName, setPrevBusinessName] = useState("");
   const [age, setAge] = useState(0);
   const [Coaddress, setCoAddress] = useState("");
+  const [buildingsNearMe, setbuildingNearMe] = useState("");
   //Bussiness Logo
 
   const [bussineName, setBussinessName] = useState("");
@@ -68,6 +72,7 @@ export default function Pitch({
   const [bussinessDetails, setBussinessDetails] = useState("");
 
   const setBussinessNameList = (code) => {
+    console.log(code);
     setbussinessnameList(bussinessesName(code));
   };
 
@@ -268,7 +273,7 @@ export default function Pitch({
   //   // console.log(BIR);
   //   // console.log(BRGYClearance);
   //   axios
-  //     .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/pitchbussines`, {
+  //     .post(`${process.env.REACT_APP_NETWORK_ADD}/pitchbussines`, {
   //       bussinessName: bussineName,
   //       bussinesType: bussinesType,
   //       bussinessCapital: bussinessCapital,
@@ -373,16 +378,19 @@ export default function Pitch({
   };
   const handleOnBlur = (e) => {};
   const handlePitchBusiness = async () => {
+    console.log(address);
+    console.log(buildingsNearMe);
+    console.log(hasbusinessBuild);
     setShowLoader(true);
     setTextDisble(true);
 
     const logoURL = await handleUploadImage(logo);
     const SupportingDocUrl = await handleUploadFileToCloud(supportingDoc);
     const Permits = await handleUploadFileToCloud(permits);
-
+    const proofresidence = await handleUploadFileToCloud(proofOfResidence);
     console.log(logoURL);
     axios
-      .post(`${process.env.REACT_APP_NETWORK_ADD}:3006/pitchbussines`, {
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/pitchbussines`, {
         bussinessName: bussineName,
         bussinesType: bussinesType,
         bussinessCapital: bussinessCapital,
@@ -391,18 +399,20 @@ export default function Pitch({
         permits: Permits,
         SupportingDocUrl: SupportingDocUrl,
         user_id: user_id,
-        bussiness: bussiness,
-        city: address.city,
-        province: address.province,
-        barangay: address.barangay,
-        bussLocationValue: bussLocationValue,
-        bussBuildingPlaceName: bussBuildingPlaceName,
+        bussiness: JSON.stringify(bussiness),
+        address: address,
+        // province: address.province,
+        // barangay: address.barangay,
+        bussLocationValue: hasbusinessBuild,
+        bussBuildingPlaceName: JSON.stringify(buildingsNearMe),
         bussExperinceValue: bussExperinceValue,
         prevBusinessName: prevBusinessName,
         targetAudience: targetAudience,
         useFunds: JSON.stringify(useFunds),
         installments: installments,
         totalReturn: totalReturn,
+        proofresidence,
+        PaypalEmailAddress,
       })
       .then((res) => {
         if (res.data.status) {
@@ -442,18 +452,18 @@ export default function Pitch({
     }
   };
 
-  const handleCheckboxChangeLocation = (e) => {
-    if (e === "yes") {
-      setBussLocationYes(!bussLocationYes);
-      setBussLocationNo(false);
-      setbussLocationValue("yes");
-    }
-    if (e === "no") {
-      setBussLocationNo(!bussLocationNo);
-      setBussLocationYes(false);
-      setbussLocationValue("no");
-    }
-  };
+  // const handleCheckboxChangeLocation = (e) => {
+  //   if (e === "yes") {
+  //     setBussLocationYes(!bussLocationYes);
+  //     setBussLocationNo(false);
+  //     setbussLocationValue("yes");
+  //   }
+  //   if (e === "no") {
+  //     setBussLocationNo(!bussLocationNo);
+  //     setBussLocationYes(false);
+  //     setbussLocationValue("no");
+  //   }
+  // };
   // useEffect(() => {
   //   console.log(bussiness);
   // }, [bussiness]);
@@ -757,9 +767,14 @@ export default function Pitch({
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Address</label>
-                    <Address addressData={setAddress} />
+                    {/* <Address addressData={setAddress} /> */}
+                    <AutoCompleteAddress
+                      address={setAddress}
+                      buildingsNearTheEntrep={setbuildingNearMe}
+                      hasBuilding={sethasbusinessBuild}
+                    />
                   </div>
-                  <div className="mb-3">
+                  {/* <div className="mb-3">
                     <label className="form-label">
                       Does you business is near a school, department store,
                       crowded places or etc...?
@@ -801,7 +816,7 @@ export default function Pitch({
                       disabled={textDisable}
                       onChange={(e) => setbussBuildingPlaceName(e.target.value)}
                     />
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -1021,6 +1036,17 @@ Explain why you believe there's demand within this audience."
             <div className="col container p-3">
               <h3>Funding Details</h3>
               <div class=" mb-3 ">
+                <div class="form-floating mb-3">
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="floatingInput"
+                    placeholder="name@example.com"
+                    onChange={(e) => setPaypalEmailAddres(e.target.value)}
+                  />
+                  <label for="floatingInput">Paypal email address</label>
+                </div>
+
                 <label className="form-label d-flex align-items-center gap-2">
                   Use of Funds
                   <FontAwesomeIcon
@@ -1172,20 +1198,33 @@ Explain why you believe there's demand within this audience."
             </div>
             <hr />
             <div className="col container p-3">
-              <h3>Business Registrations & Permits and Licneses Files</h3>
+              <h3>Business Registrations & Permits Files</h3>
 
               <div className="ms-4">
                 <div class="mb-3">
                   <label for="formFileMultiple" class="form-label">
-                    Upload Business Files
+                    Bussines Credentials
                   </label>
                   <input
                     class="form-control"
                     type="file"
-                    id="formFileMultiple"
+                    id="formFile"
                     disabled={textDisable}
                     multiple
                     onChange={(e) => setPermits(e.target.files)}
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="formFileMultiple" class="form-label">
+                    Proof of Residence
+                  </label>
+                  <input
+                    class="form-control"
+                    type="file"
+                    id="formFile"
+                    disabled={textDisable}
+                    multiple
+                    onChange={(e) => setProofOfResdence(e.target.files)}
                   />
                 </div>
               </div>
