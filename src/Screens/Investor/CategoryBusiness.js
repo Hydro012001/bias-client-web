@@ -19,7 +19,6 @@ function CategoryBusiness(props) {
             const matchElement = data.filter((item) =>
               categoryData.includes(item.buss_type_name)
             );
-            console.log(matchElement);
           } else {
           }
         } else {

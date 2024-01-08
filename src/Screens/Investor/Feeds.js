@@ -2,14 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faList, faFilter } from "@fortawesome/free-solid-svg-icons";
 import Form from "react-bootstrap/Form";
 import "../CSS/investorFeed.css";
-import {
-  NavLink,
-  Outlet,
-  useLocation,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import Nav from "react-bootstrap/Nav";
 import { useEffect, useState } from "react";
 import {
@@ -17,20 +10,15 @@ import {
   searchFilter,
 } from "../../Utils/categoriesAPI";
 import newIcon from "../../icons/newIcon.png";
-import { Button, ListGroup, Modal } from "react-bootstrap";
 import axios from "axios";
-import { businessLikes } from "../../Components/bussinesDetails";
+
 export default function Feeds() {
   const navigate = useNavigate();
   const { typeKey, category } = useParams();
   const [activeKey, setActiveKey] = useState("retail");
   const [clickedCode, setClickedCode] = useState([]);
-  const [listBusiness, setListBusiness] = useState([]);
-
-  // useEffect(() => {
-  //   navigate(`?category=${selectedItems.join(",")}`);
-  // }, [selectedItems, navigate]);
-
+  const [bussinessCategory, setBussinessCategory] = useState([]);
+  const [businessSubCategory, setBusinessSubCategory] = useState([]);
   const [checkBoxsData, setCheckBoxData] = useState([]);
 
   const getLinkClassName = (eventKey) => {
@@ -38,18 +26,48 @@ export default function Feeds() {
   };
 
   useEffect(() => {
-    const filteredSearch = searchFilter.find(
-      (item) => item.category === typeKey
-    );
+    axios
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/bussinesTypeList`)
+      .then((res) => {
+        if (res.data.status) {
+          setBussinessCategory(res.data.categoryres);
 
-    if (filteredSearch) {
-      setCheckBoxData(filteredSearch.data);
+          setBusinessSubCategory(res.data.subcategoryRes);
+          setCheckBoxData(res.data.subcategoryRes);
+        } else {
+        }
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  }, []);
+
+  useEffect(() => {
+    // const filteredSearch = businessSubCategory.find(
+    //   (item) => item.ctg_name === typeKey
+    // );
+
+    if (typeKey === "all" || typeKey === "new") {
+      setCheckBoxData(businessSubCategory);
+    } else {
+      const filteredSearch = businessSubCategory.reduce(
+        (result, curretnItem) => {
+          if (curretnItem.ctg_name === typeKey) {
+            result.push({
+              sub_ctg_name: curretnItem.sub_ctg_name,
+              sub_ctg_id: curretnItem.sub_ctg_id,
+            });
+          }
+          return result;
+        },
+        []
+      );
+
+      if (filteredSearch) {
+        setCheckBoxData(filteredSearch);
+      }
     }
   }, [typeKey]);
-
-  // useEffect(() => {
-  //   console.log(location);
-  // }, [location]);
 
   useEffect(() => {
     setActiveKey(typeKey);
@@ -63,26 +81,24 @@ export default function Feeds() {
     } else {
       navigate(`list/${typeKey}/category/all`);
     }
-    // const joinCategories = categories.includes(e);
-    // console.log(joinCategories);
   };
   useEffect(() => {
     setClickedCode(category);
   }, [category]);
 
-  const handleAbbreviatedValue = (value) => {
-    if (value >= 1000000000) {
-      return (value / 1000000000).toFixed(1) + "B";
-    }
-    if (value >= 1000000) {
-      return (value / 1000000).toFixed(1) + "M";
-    }
-    if (value >= 1000) {
-      return (value / 1000).toFixed(1) + "K";
-    } else {
-      return value;
-    }
-  };
+  // const handleAbbreviatedValue = (value) => {
+  //   if (value >= 1000000000) {
+  //     return (value / 1000000000).toFixed(1) + "B";
+  //   }
+  //   if (value >= 1000000) {
+  //     return (value / 1000000).toFixed(1) + "M";
+  //   }
+  //   if (value >= 1000) {
+  //     return (value / 1000).toFixed(1) + "K";
+  //   } else {
+  //     return value;
+  //   }
+  // };
 
   return (
     <div className="mt-5 pt-3">
@@ -111,7 +127,7 @@ export default function Feeds() {
             as={NavLink}
             className={`${getLinkClassName("new")} position-relative`}
           >
-            New{" "}
+            New
             <img
               src={newIcon}
               alt="..."
@@ -124,47 +140,109 @@ export default function Feeds() {
               className="position-absolute"
             />
           </Nav.Link>
-          <Nav.Link
-            to={"list/investee/category/all"}
-            eventKey={"investee"}
+          <div className="overflow-auto" style={{ height: "10rem" }}>
+            {bussinessCategory.map((item) => (
+              <Nav.Link
+                to={`list/${item.ctg_name}/category/all`}
+                eventKey={`${item.ctg_name}`}
+                as={NavLink}
+                className={getLinkClassName(`${item.ctg_name}`)}
+                key={item.ctg_id}
+              >
+                {item.ctg_name}
+              </Nav.Link>
+            ))}
+          </div>
+
+          {/* <Nav.Link
+            eventKey="Retails"
+            to={"list/Retails/category/all"}
             as={NavLink}
-            className={getLinkClassName("investee")}
+            className={getLinkClassName("Retails")}
           >
-            Investee
+            Retails
           </Nav.Link>
 
           <Nav.Link
-            to={"list/retail/category/all"}
-            eventKey={"retail"}
+            eventKey="Technology"
+            to={"list/Technology/category/all"}
             as={NavLink}
-            className={getLinkClassName("retail")}
+            className={getLinkClassName("Technology")}
           >
-            Retail
+            Technology
           </Nav.Link>
           <Nav.Link
-            eventKey="street vendors"
-            to={"list/street vendors/category/all"}
+            eventKey="Manufacturing"
+            to={"list/Manufacturing/category/all"}
             as={NavLink}
-            className={getLinkClassName("street vendors")}
+            className={getLinkClassName("Manufacturing")}
           >
-            Street Vendors
+            Manufacturing
           </Nav.Link>
           <Nav.Link
-            eventKey="food and beverage"
-            to={"list/food and beverage/category/all"}
+            eventKey="Health Services"
+            to={"list/Health Services/category/all"}
             as={NavLink}
-            className={getLinkClassName("food and beverage")}
+            className={getLinkClassName("Health Services")}
+          >
+            Health Services
+          </Nav.Link>
+          <Nav.Link
+            eventKey="Personal Care Services"
+            to={"list/Personal Care Services/category/all"}
+            as={NavLink}
+            className={getLinkClassName("Personal Care Services")}
+          >
+            Personal Care Services
+          </Nav.Link>
+          <Nav.Link
+            eventKey="Arts and Crafts"
+            to={"list/Arts and Crafts/category/all"}
+            as={NavLink}
+            className={getLinkClassName("Arts and Crafts")}
+          >
+            Arts and Crafts
+          </Nav.Link>
+          <Nav.Link
+            eventKey="Food and Beverage"
+            to={"list/Food and Beverage/category/all"}
+            as={NavLink}
+            className={getLinkClassName("Food and Beverage")}
           >
             Food and Beverage
           </Nav.Link>
           <Nav.Link
-            eventKey="e-commerce"
-            to={"list/e-commerce/category/all"}
+            eventKey="Food and Beverage"
+            to={"list/Food and Beverage/category/all"}
             as={NavLink}
-            className={getLinkClassName("e-commerce")}
+            className={getLinkClassName("Food and Beverage")}
           >
-            E-commerce
+            Food and Beverage
           </Nav.Link>
+          <Nav.Link
+            eventKey="Home Services"
+            to={"list/Home Services/category/all"}
+            as={NavLink}
+            className={getLinkClassName("Home Services")}
+          >
+            Home Services
+          </Nav.Link>
+          <Nav.Link
+            eventKey="Entertainment"
+            to={"list/Entertainment/category/all"}
+            as={NavLink}
+            className={getLinkClassName("Entertainment")}
+          >
+            Entertainment
+          </Nav.Link>
+          <Nav.Link
+            eventKey="Education"
+            to={"list/Education/category/all"}
+            as={NavLink}
+            className={getLinkClassName("Education")}
+          >
+            Education
+          </Nav.Link> */}
         </Nav>
 
         <div className="d-flex flex-column row pt-3 ">
@@ -179,16 +257,16 @@ export default function Feeds() {
                 {checkBoxsData.map((item, index) => (
                   <Form.Check
                     type={"checkbox"}
-                    id={item.code}
+                    id={item.sub_ctg_id}
                     key={index}
-                    label={item.businessType}
+                    label={item.sub_ctg_name}
                     style={{ fontSize: "14px" }}
-                    value={item.businessType}
+                    value={item.sub_ctg_name}
                     onChange={(e) => {
                       handleNavigateCategories(e.target.value, e);
                     }}
                     checked={
-                      clickedCode ? clickedCode.includes(item.businessType) : ""
+                      clickedCode ? clickedCode.includes(item.sub_ctg_name) : ""
                     }
                   />
                 ))}

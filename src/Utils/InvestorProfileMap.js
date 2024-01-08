@@ -1,7 +1,10 @@
 import React from "react";
 const mapInvestorProfile = (investments, size) => {
   const firstThreeElements = investments
-    .filter((data, index) => data.investor_id && index < 5)
+    .filter(
+      (data, index) =>
+        data.investor_id && index < 5 && data.invst_status !== "cancel"
+    )
     .map((data, index) => (
       <React.Fragment key={data.investor_id}>
         {data.investor_id ? (

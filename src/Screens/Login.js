@@ -8,6 +8,9 @@ import emailjs from "@emailjs/browser";
 import axios from "axios";
 import Loader from "../Components/loader";
 import { decryptTextId, encrypTextId } from "../Components/EncryptIDs";
+import Typewriter from "typewriter-effect";
+import logo from "../icons/logo.jpg";
+import logopng from "../icons/logo.png";
 import PasswordStrengthBar from "react-password-strength-bar";
 import cryptoRandomString from "crypto-random-string";
 export default function Login() {
@@ -27,6 +30,8 @@ export default function Login() {
   const [emailForFOrgotPass, setEmailForForgotPass] = useState("");
   const [GeneratedCOdeForFOrgotPass, setGeneratedCOdeForFOrgotPass] =
     useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [ShowNewPassShow, setNewPassShow] = useState(false);
   const [showNewPass, setShowNewPass] = useState(false);
   const [newPass, setNewPas] = useState("");
   const [newPassConfirm, setNewPassConfirm] = useState("");
@@ -49,18 +54,19 @@ export default function Login() {
             length: 6,
             type: "numeric",
           });
+          console.log(generatedCode);
           setGeneratedCodes(generatedCode);
 
           emailjs
             .send(
-              "service_mbvx5x9",
-              "template_7m8yhnl",
+              "service_277wgg9",
+              "template_crejuxe",
               {
                 to_name: email,
                 message: generatedCode,
                 send_to: email,
               },
-              "-yH3TEB14-G4yit6d"
+              "SpBOvjyD_Lmx07hlo"
             )
             .then((data) => {
               localStorage.setItem(
@@ -74,7 +80,6 @@ export default function Login() {
               setUserType(response.data.result[0].user_type);
             })
             .catch((error) => {
-              console.log(error);
               setBtnStatus(false);
               setShowLoader(false);
             });
@@ -87,7 +92,6 @@ export default function Login() {
         }
       })
       .catch((error) => {
-        console.log(error.message);
         setAlertMsg(error.message);
         setShow(true);
         setAlertType("danger");
@@ -102,7 +106,6 @@ export default function Login() {
   const handleLoginUser = () => {
     if (generatedCodes === code) {
       setBtnStatus(false);
-      console.log(userType);
 
       if (userType === "entrepreneur") {
         setAlertMsg("Login successfully");
@@ -159,24 +162,21 @@ export default function Login() {
       length: 6,
       type: "numeric",
     });
+
     setGeneratedCOdeForFOrgotPass(generatedCode);
 
     emailjs
       .send(
-        "service_mbvx5x9",
-        "template_7m8yhnl",
+        "service_277wgg9",
+        "template_crejuxe",
         {
           to_name: emailForFOrgotPass,
           message: generatedCode,
           send_to: emailForFOrgotPass,
         },
-        "-yH3TEB14-G4yit6d"
+        "SpBOvjyD_Lmx07hlo"
       )
       .then((data) => {
-        console.log(data);
-        // if(data.status){
-
-        // }
         setShowLoadingSendCode(false);
         setShowCheckCode(true);
         setShowResend(false);
@@ -247,6 +247,18 @@ export default function Login() {
 
   return (
     <>
+      <ToastContainer position="top-center" className="p-3">
+        <Toast
+          className="d-inline-block m-1"
+          bg={alertType}
+          show={show}
+          delay={3000}
+          onClose={() => setShow(false)}
+          autohide
+        >
+          <Toast.Body className="primary text-light">{alertMsg}</Toast.Body>
+        </Toast>
+      </ToastContainer>
       {ForgotPass ? (
         <Modal show={ForgotPass} onHide={handleClose}>
           <Modal.Header closeButton>
@@ -258,7 +270,7 @@ export default function Login() {
                 <div className="mb-3">
                   <label className="form-label">New Password</label>
                   <input
-                    type="password"
+                    type={ShowNewPassShow ? "text" : "password"}
                     onChange={(e) => setNewPas(e.target.value)}
                     className="form-control"
                     value={newPass}
@@ -274,10 +286,25 @@ export default function Login() {
                 <div className="mb-3">
                   <label className="form-label">Confirm Password</label>
                   <input
-                    type="password"
+                    type={ShowNewPassShow ? "text" : "password"}
                     onChange={(e) => setNewPassConfirm(e.target.value)}
                     className="form-control"
                   />
+                </div>
+                <div class="form-check mt-3 mb-3">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value=""
+                    id="flexCheckDefault"
+                    onChange={() => setNewPassShow(!ShowNewPassShow)}
+                  />
+                  <label
+                    class="form-check-label  fw-bold"
+                    for="flexCheckDefault"
+                  >
+                    Show Password
+                  </label>
                 </div>
                 <div className="d-flex justify-content-between">
                   <Button variant="primary" onClick={handleSubmitForgotPass}>
@@ -373,23 +400,14 @@ export default function Login() {
         ""
       )}
 
-      <div className="contianer-fluid row">
-        <ToastContainer position="top-center" className="p-3">
-          <Toast
-            className="d-inline-block m-1"
-            bg={alertType}
-            show={show}
-            delay={3000}
-            onClose={() => setShow(false)}
-            autohide
+      <div className="w-100 d-flex justify-content-evenly ">
+        <div className="w-50 d-flex flex-column justify-content-center align-items-center">
+          <div
+            className="w-75 p-5 d-flex flex-column  justify-content-center "
+            style={{ height: "100vh" }}
           >
-            <Toast.Body className="primary text-light">{alertMsg}</Toast.Body>
-          </Toast>
-        </ToastContainer>
-        <div className="row align-items-center col-6 justify-content-center">
-          <div className="row align-items-center justify-content-center">
             <h1 className="text-center">Login</h1>
-            <div className="col-8">
+            <div className="">
               <div className="mb-3">
                 <label className="form-label">Email Address</label>
                 <input
@@ -404,14 +422,24 @@ export default function Login() {
                 <label className="form-label">Password</label>
                 <input
                   class="form-control"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   onChange={(e) => setPass(e.target.value)}
                 />
 
-                <div id="passwordHelpBlock" class="form-text">
-                  Your password must be 8-20 characters long, contain letters
-                  and numbers, and must not contain spaces, special characters,
-                  or emoji.
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value=""
+                    id="flexCheckDefault"
+                    onChange={() => setShowPassword(!showPassword)}
+                  />
+                  <label
+                    class="form-check-label text-primary"
+                    for="flexCheckDefault"
+                  >
+                    Show Password
+                  </label>
                 </div>
               </div>
 
@@ -436,7 +464,7 @@ export default function Login() {
                 onClick={showForgotPassword}
                 style={{ cursor: "pointer" }}
               >
-                Forgot password ?
+                Forgot Password ?
               </label>
               <p className="text-center mt-3">
                 Don't have a acount? Click <Link to="/signup">Sign up</Link>
@@ -444,12 +472,54 @@ export default function Login() {
             </div>
           </div>
         </div>
-        <div className="col text-center ">
-          <img
-            src={loginIcon}
-            alt="Welcome"
-            style={{ width: "80%", height: "38rem" }}
-          />
+        <div className="w-50 bg-primary text-light" style={{ height: "100vh" }}>
+          <div
+            className="d-flex flex-column justify-content-center align-items-center w-100 mt-5 text-center gap-2"
+            style={{ height: "70vh" }}
+          >
+            <img
+              src={logo}
+              alt="..."
+              className="rounded-circle shadow-lg"
+              style={{ width: "15rem", height: "15rem" }}
+            />
+            <label className="fs-3 ">
+              <label className="">
+                <strong className="fs-1 ">B</strong>usiness{" "}
+                <strong className="fs-1 ">I</strong>
+                nvestment <strong className="fs-1 ">A</strong>pplication for{" "}
+                <strong className="fs-1 ">S</strong>mall Entrepreneurs
+              </label>
+            </label>
+
+            <Typewriter
+              options={{
+                strings: [
+                  "Investing our way through the future.",
+                  "Empowering Dreams, Igniting Success — Where Innovation Meets Opportunity.",
+                ],
+                autoStart: true,
+                loop: true,
+                deleteSpeed: 30,
+                delay: 70,
+                wrapperClassName: "fw-bold mt-5",
+              }}
+            />
+            {/* <label>
+            <Typewriter
+              onInit={(typewriter) => {
+                typewriter
+                  .typeString("Investing our way through the future.")
+                  .pauseFor(1000)
+                  .deleteAll()
+                  .typeString(
+                    "Empowering Dreams, Igniting Success — Where Innovation Meets Opportunity."
+                  )
+                  .start();
+              }}
+            />
+          </label> */}
+          </div>
         </div>
       </div>
     </>

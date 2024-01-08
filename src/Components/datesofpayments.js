@@ -63,8 +63,8 @@ export default function CalendarComponent() {
       .then((res) => {
         //console.log(res.data.result);
         setInvestorList(res.data.result);
-      })
-      .catch((error) => alert(error));
+      });
+    // .catch((error) => alert(error));
   }, []);
 
   return (

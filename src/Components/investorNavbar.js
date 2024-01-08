@@ -28,6 +28,8 @@ import Popover from "react-bootstrap/Popover";
 import NotificationInvestor from "../Screens/Investor/Notification";
 import ChatComponent from "../Screens/Chat/ChatComponent";
 import { decryptTextId } from "./EncryptIDs";
+import ErrorHandler from "../ErrorPage/ErrorHandler";
+
 // import io from "socket.io-client";
 
 // const socket = io("http://localhost:3007", {
@@ -85,7 +87,7 @@ export default function NavbarInvestor() {
         }
       })
       .catch((error) => {
-        alert(error);
+        ErrorHandler(error, navigate);
       });
   }, [user_id]);
 

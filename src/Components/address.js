@@ -6,7 +6,10 @@ import {
   barangays,
   provinceByName,
 } from "select-philippines-address";
+import ErrorHandler from "../ErrorPage/ErrorHandler";
+import { useNavigate } from "react-router-dom";
 export default function Address({ addressData }) {
+  const navigate = useNavigate();
   const [selectedBarangay, setSelectedBarangay] = useState("");
   const [selectCity, setSelectCity] = useState("");
   const [selectedProvince, setselectedProvince] = useState("");
@@ -23,8 +26,14 @@ export default function Address({ addressData }) {
   const settingProvince = (provinceName) => {
     provinceByName(provinceName)
       .then((province) => setProvinceCode(province.province_code))
+      .catch((error) => {
+        ErrorHandler(error, navigate);
+      })
 
-      .then(() => setselectedProvince(provinceName));
+      .then(() => setselectedProvince(provinceName))
+      .catch((error) => {
+        ErrorHandler(error, navigate);
+      });
   };
 
   useEffect(() => {
@@ -32,7 +41,11 @@ export default function Address({ addressData }) {
   }, [provinceCode]);
 
   const settingCities = (citiesCode, citiesName) => {
-    barangays(citiesCode).then((res) => setBarangaysList(res));
+    barangays(citiesCode)
+      .then((res) => setBarangaysList(res))
+      .catch((error) => {
+        ErrorHandler(error, navigate);
+      });
 
     setSelectCity(citiesName);
   };

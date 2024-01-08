@@ -129,3 +129,52 @@ export function displayBusinessStation(stationname) {
 
 //   return uniqueItems;
 // }
+
+// export default function calculateTotalInvest(investment) {
+//   const investDetails = investment.map((item) => item);
+
+//   let totalSum = 0;
+
+//   for (let i = 0; i < investDetails.length; i++) {
+//     if (investDetails[i].invst_status !== "cancel") {
+//       totalSum += parseFloat(investDetails[i].invst_amount);
+//     } else {
+//     }
+//   }
+//   if (totalSum) {
+//     return totalSum;
+//   } else {
+//     return 0;
+//   }
+// }
+export default function calculateTotalInvest(investment) {
+  const investDetails = investment.map((item) => item.invest_amount);
+
+  let totalSum = 0;
+
+  for (let i = 0; i < investDetails.length; i++) {
+    totalSum += parseFloat(investDetails[i]);
+  }
+  if (totalSum) {
+    return totalSum;
+  } else {
+    return 0;
+  }
+}
+// const calculateTotalInvest = (investment) => {
+//   const investDetails = investment.map((item) => item);
+
+//   let totalSum = 0;
+
+//   for (let i = 0; i < investDetails.length; i++) {
+//     if (investDetails[i].invst_status !== "cancel") {
+//       totalSum += parseFloat(investDetails[i].invst_amount);
+//     } else {
+//     }
+//   }
+//   if (totalSum) {
+//     return totalSum;
+//   } else {
+//     return 0;
+//   }
+// };

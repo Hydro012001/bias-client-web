@@ -12,9 +12,13 @@ import Loader from "../Components/loader";
 import { mapInvestorProfile } from "../Utils/InvestorProfileMap";
 import { businessLikes } from "./bussinesDetails";
 import newIcon from "../icons/newIcon.png";
+import Investor_Terms_and_Condition from "../Terms and Condition/Investor_Terms_and_Condition";
+import calculateTotalInvest from "../Utils/Compute";
+import ErrorHandler from "../ErrorPage/ErrorHandler";
 
 export default function ListOfBusiness() {
   const navigate = useNavigate();
+  const agree = sessionStorage.getItem("investorAgree");
   const [hasLikes, setHasLikes] = useState(null);
   const [likes, setLikes] = useState([]);
   const [ImageLoaded, setImageLoaded] = useState(false);
@@ -30,25 +34,25 @@ export default function ListOfBusiness() {
   const [investorRecomededBusinessList, setinvestorRecomededBusinessList] =
     useState([]);
   const [newBusinessList, setNewBusinessList] = useState([]);
-  const initialBusinessLikes = businessLikes.map((item) => ({
-    name: item,
-    activeClass: false,
-  }));
-  const [likesBusiness, setLikesBusiness] = useState(initialBusinessLikes);
-  const calculateTotalInvest = (investment) => {
-    const investDetails = investment.map((item) => item.invest_amount);
 
-    let totalSum = 0;
+  const [likesBusiness, setLikesBusiness] = useState([]);
+  // const calculateTotalInvest = (investment) => {
+  //   const investDetails = investment.map((item) => item);
 
-    for (let i = 0; i < investDetails.length; i++) {
-      totalSum += parseFloat(investDetails[i]);
-    }
-    if (totalSum) {
-      return totalSum;
-    } else {
-      return 0;
-    }
-  };
+  //   let totalSum = 0;
+
+  //   for (let i = 0; i < investDetails.length; i++) {
+  //     if (investDetails[i].invst_status !== "cancel") {
+  //       totalSum += parseFloat(investDetails[i].invst_amount);
+  //     } else {
+  //     }
+  //   }
+  //   if (totalSum) {
+  //     return totalSum;
+  //   } else {
+  //     return 0;
+  //   }
+  // };
 
   //Get the list of business
   useEffect(() => {
@@ -62,6 +66,13 @@ export default function ListOfBusiness() {
           const initialResult = res.data.filterData;
           const userHasLikes = res.data.hasLikes;
           const withInvestors = res.data.withInvestors;
+          const subCategory = res.data.subCategory;
+
+          const initialBusinessLikes = subCategory.map((item) => ({
+            ...item,
+            activeClass: false,
+          }));
+          setLikesBusiness(initialBusinessLikes);
 
           if (userHasLikes) {
             setHasLikes(true);
@@ -142,7 +153,7 @@ export default function ListOfBusiness() {
         }
         setShowLoader(false);
       })
-      .catch((error) => console.log(error));
+      .catch((error) => ErrorHandler(error, navigate));
   }, [typeKey]);
 
   const toggletoSetRecommended = () => {
@@ -150,22 +161,22 @@ export default function ListOfBusiness() {
     window.location.reload();
   };
 
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+  // const formatDate = (dateStr) => {
+  //   const date = new Date(dateStr);
+  //   return date.toLocaleDateString("en-US", {
+  //     month: "long",
+  //     day: "numeric",
+  //     year: "numeric",
+  //   });
+  // };
 
-  const checkPercentAmt = (percentAmt) => {
-    if (percentAmt) {
-      return percentAmt;
-    } else {
-      return "0";
-    }
-  };
+  // const checkPercentAmt = (percentAmt) => {
+  //   if (percentAmt) {
+  //     return percentAmt;
+  //   } else {
+  //     return "0";
+  //   }
+  // };
 
   const handlBusinessParams = (id, status, capital, amountInvested) => {
     if (status === "approve") {
@@ -294,43 +305,50 @@ export default function ListOfBusiness() {
       .catch((error) => {
         alert(error.message);
       });
-    console.log(filterLikes);
   };
+
   return (
     <>
-      <Modal show={showModal} onHide={handleClose} size="lg">
-        <Modal.Header>
-          <Modal.Title>Favorites</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="d-flex flex-wrap justify-content-evenly  w-100">
-            {likesBusiness.map((item, index) => (
-              <div key={index} style={{ cursor: "pointer" }}>
-                <div
-                  className={`rounded mb-3 p-2 ${
-                    item.activeClass ? "bg-primary text-light " : "bg-secondary"
-                  }`}
-                  onClick={() => handleNameClick(index)}
-                >
-                  {item.name}
+      {agree ? (
+        <Modal show={showModal} onHide={handleClose} size="lg">
+          <Modal.Header>
+            <Modal.Title>Favorites</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="d-flex flex-wrap justify-content-evenly  w-100">
+              {likesBusiness.map((item, index) => (
+                <div key={index} style={{ cursor: "pointer" }}>
+                  <div
+                    className={`rounded mb-3 p-2 ${
+                      item.activeClass
+                        ? "bg-primary text-light "
+                        : "bg-secondary"
+                    }`}
+                    onClick={() => handleNameClick(index)}
+                  >
+                    {item.sub_ctg_name}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" onClick={handleGetTheLikesBusiness}>
-            Submit
-          </Button>
-          <label
-            className="fw-bold ms-3"
-            onClick={handleClose}
-            style={{ cursor: "pointer" }}
-          >
-            Skip
-          </label>
-        </Modal.Footer>
-      </Modal>
+              ))}
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={handleGetTheLikesBusiness}>
+              Submit
+            </Button>
+            <label
+              className="fw-bold ms-3"
+              onClick={handleClose}
+              style={{ cursor: "pointer" }}
+            >
+              Skip
+            </label>
+          </Modal.Footer>
+        </Modal>
+      ) : (
+        <Investor_Terms_and_Condition />
+      )}
+
       {showLoader ? (
         <div
           className="contianer me-5 d-flex justify-content-center align-items-center"
@@ -340,7 +358,10 @@ export default function ListOfBusiness() {
         </div>
       ) : (
         <div className="d-flex flex-column">
-          {!recomendShow && hasLikes ? (
+          {!recomendShow &&
+          hasLikes &&
+          agree &&
+          investorRecomededBusinessList.length > 0 ? (
             <Modal show={true} onHide={toggletoSetRecommended} size="lg">
               <Modal.Header closeButton>
                 <Modal.Title>Business you likes</Modal.Title>
@@ -617,106 +638,5 @@ export default function ListOfBusiness() {
         </div>
       )}
     </>
-
-    // <>
-    //   {erromsg ? (
-    //     <ErrorMsg msg={erromsg} />
-    //   ) : (
-    //     <div className="investor">
-    //       {listBusiness.length === 0 ? (
-    //         <h1>No pitch business yet</h1>
-    //       ) : (
-    //         <div className="businessList">
-    //           {listBusiness.map((item) => (
-    //             <div className="feeds" key={item.buss_id}>
-    //               <div className="entrepUser">
-    //                 <div className="userDetails">
-    //                   <div id="profilePic">
-    //                     <img
-    //                       src={item.user_profile_photo}
-    //                       alt="user"
-    //                       id="profilePic"
-    //                     />
-    //                   </div>
-    //                   <span>
-    //                     {" "}
-    //                     <label id="name">
-    //                       {item.user_fname} {item.user_lname}
-    //                     </label>
-    //                     <p id="date">{formatDate(item.buss_created_at)}</p>
-    //                   </span>
-    //                 </div>
-    //                 <br />
-    //                 <p id="desc">Description : </p>
-    //                 <div className="bussDetails">
-    //                   {showMore ? (
-    //                     <>
-    //                       <p id="expand">{item.buss_details}</p>
-    //                     </>
-    //                   ) : (
-    //                     <>
-    //                       <p id="less">{item.buss_details}</p>
-    //                     </>
-    //                   )}
-    //                   <p onClick={toggleShowText} id="collapse">
-    //                     {showMore ? "Show less" : "Show more"}
-    //                   </p>
-    //                   <br />
-    //                   <h5>Capital : {item.buss_capital}</h5>
-    //                   <h5>
-    //                     Amount Remais :
-    //                     {parseInt(item.buss_capital) -
-    //                       parseInt(item.totalAmountInvts)}
-    //                   </h5>
-    //                 </div>
-    //               </div>
-
-    //               {ImageLoaded ? (
-    //                 <img
-    //                   src={item.buss_photo}
-    //                   alt="Logo"
-    //                   id="image"
-    //                   onLoad={() => setImageLoaded(true)}
-    //                 />
-    //               ) : (
-    //                 <div>
-    //                   <Loader />
-    //                   <img
-    //                     src={item.buss_photo}
-    //                     alt="Logo"
-    //                     id="image"
-    //                     onLoad={() => setImageLoaded(true)}
-    //                   />
-    //                 </div>
-    //               )}
-    //               <button
-    //                 onClick={() =>
-    //                   handlBusinessParams(
-    //                     item.buss_id,
-    //                     item.buss_status,
-    //                     item.buss_capital,
-    //                     item.totalAmountInvts
-    //                   )
-    //                 }
-    //               >
-    //                 Invest
-    //               </button>
-    //               <button onClick={() => chatInvestor(item.user_id)}>
-    //                 Message
-    //               </button>
-    //               {/* <button
-    //                 onClick={() =>
-    //                   handlBusinessParams(item.buss_id, item.buss_status)
-    //                 }
-    //               >
-    //                 Chat
-    //               </button> */}
-    //             </div>
-    //           ))}
-    //         </div>
-    //       )}
-    //     </div>
-    //   )}
-    // </>
   );
 }

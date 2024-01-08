@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import ErrorHandler from "../ErrorPage/ErrorHandler";
 function AccumalatedAmt({ buss_id }) {
+  const navigate = useNavigate();
   const [accumaltedAmt, setAccumaltedAmt] = useState(null);
   useEffect(() => {
     axios
@@ -12,6 +15,9 @@ function AccumalatedAmt({ buss_id }) {
           setAccumaltedAmt(res.data.result);
           console.log(res.data.result);
         }
+      })
+      .catch((error) => {
+        ErrorHandler(error, navigate);
       });
   }, [buss_id]);
   return (

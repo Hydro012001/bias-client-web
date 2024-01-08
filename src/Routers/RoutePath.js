@@ -39,6 +39,10 @@ import BusinessPayments from "../Components/BusinessPayments";
 import ChatComponent from "../Screens/Chat/ChatComponent";
 import ViewEntrepProfile from "../Components/ViewEntrepProfile";
 import UpdateInvestmentModa from "../Components/DisplayBusiness/UpdateInvestmentModa";
+import UpdateBusiness from "../Components/UpdateBusiness";
+import ServerError from "../ErrorPage/ServerError";
+import ConnectionError from "../ErrorPage/ConnectionError";
+import GeneralError from "../ErrorPage/GeneralError";
 
 function Router(props) {
   return (
@@ -46,9 +50,11 @@ function Router(props) {
       <Route path="/" element={<Welcome />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/error" element={<UnauthorizedAlert />} />
-
+      <Route path="/error" element={<ConnectionError />} />
+      <Route path="/server-error" element={<ServerError />} />
+      <Route path="/somethingwrong" element={<GeneralError />} />
       <Route path="/entrepreneur" element={<NavbarEntrep />}>
+        <Route path="updatebusiness" element={<UpdateBusiness />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="pitch" element={<Pitch />} />
         <Route path="account" element={<AccountEntrep />}>

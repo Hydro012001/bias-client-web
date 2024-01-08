@@ -8,6 +8,8 @@ import { Loan } from "loanjs";
 import { decryptId } from "../Encryptor";
 import { decryptTextId } from "../EncryptIDs";
 import Loader from "../loader";
+import ErrorHandler from "../../ErrorPage/ErrorHandler";
+import { LoanCalculate } from "../LoanCalculator";
 
 function UpdateInvestmentModa({
   handleShow,
@@ -62,7 +64,7 @@ function UpdateInvestmentModa({
         const remainingAmttoInvest =
           parseFloat(capitalBusiness) - parseFloat(investamount);
         setAmountReamin(remainingAmttoInvest);
-        console.log(capitalBusiness);
+        // console.log(capitalBusiness);
         setShowLoarder(false);
       });
   }, []);
@@ -70,7 +72,13 @@ function UpdateInvestmentModa({
   const [totalInterest, setTotalInterest] = useState(0);
   const handleComputeLoan = (inputAmount) => {
     if (inputAmount > 0 && inputAmount <= amoutRemain) {
-      const loanjs = new Loan(
+      // const loanjs = new Loan(
+      //   inputAmount,
+      //   investData[0].buss_approved_updated_month,
+      //   investData[0].buss_approved_percent
+      // );
+
+      const loanjs = LoanCalculate(
         inputAmount,
         investData[0].buss_approved_updated_month,
         investData[0].buss_approved_percent
@@ -80,15 +88,16 @@ function UpdateInvestmentModa({
         parseFloat(investData[0].invst_amt) + parseFloat(inputAmount)
       );
       setSummaryInterest(
-        parseFloat(loanjs.interestSum) +
+        parseFloat(loanjs.AnnualIntrestRate) +
           parseFloat(investData[0].invst_interest_sum)
       );
       setSummaryReturn(
-        parseFloat(loanjs.sum) + parseFloat(investData[0].invst_returned_amt)
+        parseFloat(loanjs.totalAmountReturn) +
+          parseFloat(investData[0].invst_returned_amt)
       );
       setAmount(inputAmount);
-      setAmountReturn(loanjs.sum);
-      setTotalInterest(loanjs.interestSum);
+      setAmountReturn(loanjs.totalAmountReturn);
+      setTotalInterest(loanjs.AnnualIntrestRate);
     } else if (parseFloat(amoutRemain) < inputAmount) {
       setMessage("Amount is greater than ");
     } else if (inputAmount <= 0) {
@@ -121,12 +130,14 @@ function UpdateInvestmentModa({
       .then((res) => {
         if (res.data.status) {
           alert(res.data.message);
+          setShow(false);
+          window.location.reload();
         } else {
           console.log(res.data.message);
         }
       })
       .catch((error) => {
-        alert(error.message);
+        ErrorHandler(error, navigate);
       });
   };
   return (
@@ -321,64 +332,71 @@ function UpdateInvestmentModa({
               ) : (
                 ""
               )}
-
-              <PayPalScriptProvider options={initialOptions}>
-                <label className="form-label text-center w-100">
-                  Invest using Paypal
-                </label>
-                <PayPalButtons
-                  style={style}
-                  onClick={async (data, actions) => {
-                    const enteredAmount = parseFloat(textBoxRef.current.value);
-                    if (enteredAmount < 0) {
-                      setMessage("Amount is less than");
-                      // You can return false or a Promise.reject() here to prevent the PayPal window from opening
-                      return false;
-                    }
-                    if (enteredAmount > parseFloat(capitalRemains)) {
-                      setMessage("Amount is greater than ");
-                      // You can return false or a Promise.reject() here to prevent the PayPal window from opening
-                      return false;
-                    }
-                  }}
-                  createOrder={async (data, actions) => {
-                    const textboxValue = textBoxRef.current.value;
-                    return await actions.order
-                      .create({
-                        purchase_units: [
-                          {
-                            amount: {
-                              currency_code: initialOptions.currency,
-                              value: parseFloat(textboxValue).toFixed(2),
-                            },
-                            description: "invest_update",
-                          },
-                        ],
-                      })
-                      .then((orderId) => {
-                        return orderId;
-                      });
-                  }}
-                  onError={(error) => {
-                    setalertStatus(true);
-                    setalertType("danger");
-                    console.log(error.message);
-                    setAlertMsg(error.message);
-                  }}
-                  onApprove={async (data, actions) => {
-                    return await actions.order.capture().then((details) => {
-                      handleUpdateInvestment(
-                        details.purchase_units[0].description,
-                        details.purchase_units[0].amount.value,
-                        details.payer.email_address,
-                        details.create_time,
-                        JSON.stringify(details)
+              {amoutRemain > 0 ? (
+                <PayPalScriptProvider options={initialOptions}>
+                  <label className="form-label text-center w-100">
+                    Invest using Paypal
+                  </label>
+                  <PayPalButtons
+                    style={style}
+                    onClick={async (data, actions) => {
+                      const enteredAmount = parseFloat(
+                        textBoxRef.current.value
                       );
-                      textBoxRef.current.value = null;
-                    });
-                  }}
-                />
-              </PayPalScriptProvider>
+                      if (enteredAmount < 0) {
+                        setMessage("Amount is less than");
+                        // You can return false or a Promise.reject() here to prevent the PayPal window from opening
+                        return false;
+                      }
+                      if (enteredAmount > parseFloat(capitalRemains)) {
+                        setMessage("Amount is greater than ");
+                        // You can return false or a Promise.reject() here to prevent the PayPal window from opening
+                        return false;
+                      }
+                    }}
+                    createOrder={async (data, actions) => {
+                      const textboxValue = textBoxRef.current.value;
+                      return await actions.order
+                        .create({
+                          purchase_units: [
+                            {
+                              amount: {
+                                currency_code: initialOptions.currency,
+                                value: parseFloat(textboxValue).toFixed(2),
+                              },
+                              description: "invest_update",
+                            },
+                          ],
+                        })
+                        .then((orderId) => {
+                          return orderId;
+                        });
+                    }}
+                    onError={(error) => {
+                      setalertStatus(true);
+                      setalertType("danger");
+                      console.log(error.message);
+                      setAlertMsg(error.message);
+                    }}
+                    onApprove={async (data, actions) => {
+                      return await actions.order.capture().then((details) => {
+                        handleUpdateInvestment(
+                          details.purchase_units[0].description,
+                          details.purchase_units[0].amount.value,
+                          details.payer.email_address,
+                          details.create_time,
+                          JSON.stringify(details)
+                        );
+                        textBoxRef.current.value = null;
+                      });
+                    }}
+                  />
+                </PayPalScriptProvider>
+              ) : (
+                <label className="fw-bold text-primary">
+                  This business has reach the capital needed.
+                </label>
+              )}
             </>
           )}
         </Modal.Body>

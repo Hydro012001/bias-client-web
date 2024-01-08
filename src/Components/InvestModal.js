@@ -5,6 +5,7 @@ import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { Loan } from "loanjs";
+import { LoanCalculate } from "./LoanCalculator";
 
 function InvestModal({
   handleShow,
@@ -117,11 +118,13 @@ function InvestModal({
 
   const handleComputeLoan = (inputAmount) => {
     if (inputAmount > 0 && inputAmount <= capitalRemains) {
-      const loanjs = new Loan(inputAmount, month, interest);
+      //const loanjs = new Loan(inputAmount, month, interest);
+
+      const loanjs = LoanCalculate(inputAmount, month, interest);
       setMessage("");
 
-      setAmountReturn(loanjs.sum);
-      setTotalInterest(loanjs.interestSum);
+      setAmountReturn(loanjs.totalAmountReturn);
+      setTotalInterest(loanjs.AnnualIntrestRate);
     } else if (parseFloat(capitalRemains) < inputAmount) {
       setMessage("Amount is greater than ");
     } else if (inputAmount <= 0) {

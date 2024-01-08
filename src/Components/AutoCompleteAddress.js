@@ -82,11 +82,11 @@ function AutoCompleteAddress({ address, hasBuilding, buildingsNearTheEntrep }) {
       }))
       .filter((building) => building.name);
     setShowLoader(false);
-    console.log(buildingsArray);
+    // console.log(buildingsArray);
     setBuildings(buildingsArray);
   };
   const handleCheckboxChangeLocation = (check) => {
-    console.log(check);
+    // console.log(check);
 
     if (check) {
       handleGetBuildings();

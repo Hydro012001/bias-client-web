@@ -18,6 +18,7 @@ import { Button } from "react-bootstrap";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Popover from "react-bootstrap/Popover";
 import NotificationEntrep from "../Screens/Entrepreneur/NotificationEntrep";
+import ErrorHandler from "../ErrorPage/ErrorHandler";
 
 export default function NavbarEntrep() {
   const navigate = useNavigate();
@@ -70,11 +71,13 @@ export default function NavbarEntrep() {
               const numofUnreadNotif = unreadNotif.filter((item) => {
                 if (item.notif_status === "unread") return item;
               });
+
               setNumberOfNotif(numofUnreadNotif);
+              console.log(unreadNotif);
             }
           })
           .catch((error) => {
-            alert(error);
+            ErrorHandler(error, navigate);
           });
       }
     }

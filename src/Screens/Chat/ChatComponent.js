@@ -33,7 +33,7 @@ function ChatComponent() {
     return () => clearInterval(invtervalsend);
   }, []);
   const handleSendMessage = () => {
-    setBtnClick(!btnClick);
+    // setBtnClick(!btnClick);
     axios
       .post(`${process.env.REACT_APP_NETWORK_ADD}/api/create-chat-room`, {
         adminId: 10,
@@ -105,7 +105,7 @@ function ChatComponent() {
                   key={item.chtmsg_id}
                 >
                   <label
-                    className={` rounded p-2  w-25  ${
+                    className={`w-50 rounded p-2  w-25  ${
                       item.chtmsg_sender_id === parseInt(user_id)
                         ? "bg-primary text-light"
                         : "bg-secondary"

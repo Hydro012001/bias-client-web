@@ -5,7 +5,17 @@ import Loader from "../../Components/loader";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import AccumalatedAmt from "../../Components/AccumalatedAmt";
-import { Button, Modal, Nav } from "react-bootstrap";
+import {
+  Button,
+  Container,
+  Dropdown,
+  Modal,
+  Nav,
+  Navbar,
+  Form,
+  ToastContainer,
+  Toast,
+} from "react-bootstrap";
 import iconlog from "../../icons/logo.jpg";
 import { NavLink, useNavigate } from "react-router-dom";
 import { computeDateStart } from "../../Utils/Compute";
@@ -33,6 +43,10 @@ export default function Investment() {
   const [EntrepId, setEntrepId] = useState("");
   const [feedbackContent, setFeedbackContent] = useState("");
   const [invstId, setInvstId] = useState("");
+  const [category, setCategory] = useState("all");
+  const [showToast, setshowToast] = useState(false);
+  const [alertMsg, setAlertMsg] = useState("");
+  const [alertType, setAlertType] = useState("");
   useEffect(() => {
     axios
       .post(`${process.env.REACT_APP_NETWORK_ADD}/investment`, {
@@ -40,7 +54,6 @@ export default function Investment() {
       })
       .then((res) => {
         if (res.data.status) {
-          console.log(res.data.result);
           setInvestment(res.data.result);
           setTodayDate(res.data.todayDate);
           // localStorage.setItem(
@@ -56,7 +69,11 @@ export default function Investment() {
           );
         }
       })
-      .catch((error) => alert(error));
+      .catch((error) => {
+        setAlertMsg(error.message);
+        setAlertType("success");
+        setshowToast("danger");
+      });
   }, [user_id]);
 
   const handleShowUpdateModalForm = (bussid, invstid, data) => {
@@ -73,16 +90,22 @@ export default function Investment() {
   };
 
   const checkUserHasWithdrawRequest = (invst_id) => {
-    //  console.log(withdrawResult);
     if (withdrawResult.length > 0) {
-      const status = withdrawResult.map((item) => {
-        if (item.withdraw_invst_id === invst_id) {
-          return item.withdraw_status;
-        }
-      });
+      const status = withdrawResult.filter(
+        (item) => item.withdraw_invst_id === invst_id
+      );
 
-      if (status[0]) {
-        return { value: true, status: status[0] };
+      if (status.length > 0) {
+        if (
+          status[0].withdraw_status === "request" ||
+          status[0].withdraw_status === "send" ||
+          status[0].withdraw_status === "receive" ||
+          status[0].withdraw_status === "cancel"
+        ) {
+          return { value: true, status: status[0].withdraw_status };
+        } else {
+          return { value: false };
+        }
       } else {
         return { value: false };
       }
@@ -90,31 +113,6 @@ export default function Investment() {
       return { value: false };
     }
   };
-
-  // const getLatestInvestment = (id) => {
-  //   try {
-  //     const investLatestData = decryptId(
-  //       localStorage.getItem("invest_update_data")
-  //     );
-
-  //     const investDataBaseOnInvestID = investLatestData.filter((item) => {
-  //       if (parseInt(item.invst_update_invst_id) === parseInt(id)) {
-  //         return item;
-  //       }
-  //     });
-
-  //     const latestUpdateIndex =
-  //       investDataBaseOnInvestID[investDataBaseOnInvestID.length - 1];
-
-  //     console.log(latestUpdateIndex);
-  //   } catch (error) {
-  //     return "No id found";
-  //   }
-  // };
-
-  // getLatestInvestment(29);
-
-  //Function to get the remaining months
 
   const calculateReaminingMonths = (todaydate, startDate, endDate) => {
     const monthsFromStart =
@@ -147,14 +145,20 @@ export default function Investment() {
       })
       .then((res) => {
         if (res.data.status) {
-          alert("Your request was send success fully");
+          setAlertMsg(res.data.message);
+          setAlertType("success");
+          setshowToast(true);
           window.location.reload();
         } else {
-          alert(res.data.message);
+          setAlertMsg(res.data.message);
+          setAlertType("danger");
+          setshowToast(true);
         }
       })
       .catch((error) => {
-        alert(error.message);
+        setAlertMsg(error.message);
+        setAlertType("danger");
+        setshowToast(true);
       });
   };
 
@@ -188,6 +192,7 @@ export default function Investment() {
       .then((res) => {
         if (res.data.status) {
           alert(res.data.message);
+          window.location.reload();
         } else {
           alert(res.data.message);
         }
@@ -196,6 +201,28 @@ export default function Investment() {
         alert(error.message);
       });
   };
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  useEffect(() => {
+    const sortedData = investments.sort((a, b) => {
+      const dateA = new Date(a.invst_created_at);
+      const dateB = new Date(b.invst_created_at);
+
+      if (dateA >= new Date(startDate) && dateA <= new Date(endDate)) {
+        if (dateB >= new Date(startDate) && dateB <= new Date(endDate)) {
+          return dateA - dateB;
+        } else {
+          return -1; // 'a' is within the range, but 'b' is not, so 'a' comes first
+        }
+      } else if (dateB >= new Date(startDate) && dateB <= new Date(endDate)) {
+        return 1; // 'b' is within the range, but 'a' is not, so 'b' comes first
+      } else {
+        return 0; // both 'a' and 'b' are outside the range, their order doesn't matter
+      }
+    });
+
+    setInvestment(sortedData);
+  }, [startDate, endDate]);
   return (
     <>
       {/* <div className="investment" style={{ marginTop: "5rem" }}>
@@ -310,8 +337,82 @@ export default function Investment() {
           </div>
         </div>
       </div> */}
+      {showToast ? (
+        <ToastContainer position="top-center" className="p-3">
+          <Toast
+            className="d-inline-block m-1"
+            bg={alertType}
+            show={showToast}
+            delay={3000}
+            onClose={() => setshowToast(false)}
+            autohide
+          >
+            <Toast.Body className="primary text-light">{alertMsg}</Toast.Body>
+          </Toast>
+        </ToastContainer>
+      ) : (
+        ""
+      )}
 
-      <div className="contianer d-flex   pt-2 gap-3 ">
+      <div className="contianer mt-5 pt-3 gap-3 ">
+        {" "}
+        <Navbar collapseOnSelect expand="lg" className="bg-body-tertiary ">
+          <Container fluid>
+            <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+            <Navbar.Collapse id="responsive-navbar-nav">
+              <Nav className="me-auto" variant="pills">
+                {" "}
+                <Dropdown>
+                  <Dropdown.Toggle variant="primary" id="dropdown-basic">
+                    Type
+                  </Dropdown.Toggle>
+
+                  <Dropdown.Menu>
+                    <Dropdown.Item onClick={() => setCategory("all")}>
+                      All
+                    </Dropdown.Item>
+                    <Dropdown.Item onClick={() => setCategory("request")}>
+                      Request
+                    </Dropdown.Item>
+                    <Dropdown.Item onClick={() => setCategory("approved")}>
+                      Approved
+                    </Dropdown.Item>
+                    <Dropdown.Item onClick={() => setCategory("started")}>
+                      Started
+                    </Dropdown.Item>
+                    <Dropdown.Item onClick={() => setCategory("cancel")}>
+                      Cancelled
+                    </Dropdown.Item>
+                    <Dropdown.Item onClick={() => setCategory("complete")}>
+                      Complete
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              </Nav>
+
+              <Form className="d-flex align-items-center gap-2">
+                <label className="w-50">Start Date</label>
+                <Form.Control
+                  type="date"
+                  placeholder="Search"
+                  className="me-2"
+                  aria-label="Search"
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </Form>
+              <Form className="d-flex align-items-center gap-2">
+                <label className="w-50">End Date</label>
+                <Form.Control
+                  type="date"
+                  placeholder="Search"
+                  className="me-2"
+                  aria-label="Search"
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </Form>
+            </Navbar.Collapse>
+          </Container>
+        </Navbar>
         <Modal show={show} onHide={handleClose}>
           <Modal.Header closeButton>
             <Modal.Title>Withdrawal Request </Modal.Title>
@@ -390,7 +491,647 @@ export default function Investment() {
             </Button>
           </Modal.Footer>
         </Modal>
-        <div className="w-100 position-relative ">
+        <div className=" d-flex flex-column justify-content-center p-2">
+          {investments ? (
+            <>
+              {investments.map((item) => (
+                <div
+                  className="border d-flex  flex-column  pb-4 mb-4"
+                  style={{ width: "100%" }}
+                  key={item.invst_id}
+                >
+                  {category === "all" ? (
+                    <>
+                      <div className="d-flex align-items-center pt-3 pb-3 justify-content-between">
+                        <span className="w-50 w-md d-flex align-items-center gap-4 ps-2">
+                          <label className="fw-bold">{`${item.user_fname} ${item.user_mname} ${item.user_lname}`}</label>
+                          {/* <button
+                            type="button"
+                            class="btn btn-outline-primary border border-2 border-primary"
+                          >
+                            View Business
+                          </button> */}
+                        </span>
+                        {item.invst_start_date && item.invst_end_date ? (
+                          <>
+                            {checkUserHasWithdrawRequest(item.invst_id)
+                              .status === "send" ? (
+                              <>
+                                {" "}
+                                {new Date(todayDate) >=
+                                  new Date(item.invst_end_date) &&
+                                item.invst_status === "started" ? (
+                                  <div className=" d-flex bg-secondary align-items-center w-50 justify-content-center">
+                                    <Typewriter
+                                      options={{
+                                        strings: [
+                                          "Your withdrawal amount has been send",
+                                          "Click the recieve button to complete the transactions.",
+                                        ],
+                                        autoStart: true,
+                                        loop: true,
+                                        deleteSpeed: 30,
+                                        delay: 70,
+                                        wrapperClassName:
+                                          "fw-bold text-primary",
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  ""
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                {" "}
+                                {new Date(todayDate) >=
+                                  new Date(item.invst_end_date) &&
+                                item.invst_status === "started" ? (
+                                  <div className=" d-flex bg-secondary align-items-center w-50 justify-content-center">
+                                    <Typewriter
+                                      options={{
+                                        strings: [
+                                          "Your investment is ready to be withdraw....",
+                                        ],
+                                        autoStart: true,
+                                        loop: true,
+                                        deleteSpeed: 30,
+                                        delay: 70,
+                                        wrapperClassName:
+                                          "fw-bold text-primary",
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  ""
+                                )}
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          ""
+                        )}
+
+                        <span className="w-50 d-flex align-items-center justify-content-end gap-4 me-3">
+                          {new Date(todayDate) >=
+                            new Date(item.invst_start_date) &&
+                          new Date(todayDate) <=
+                            new Date(item.invst_end_date) ? (
+                            <label className="fw-bold">
+                              Months Remains :{" "}
+                              <label className="text-primary">
+                                {" "}
+                                {calculateReaminingMonths(
+                                  new Date(todayDate),
+                                  new Date(item.invst_start_date),
+                                  new Date(item.invst_end_date)
+                                )}
+                              </label>
+                            </label>
+                          ) : (
+                            ""
+                          )}
+
+                          <label className="fw-bold text-primary">
+                            {item.invst_status.toUpperCase()}
+                          </label>
+                        </span>
+                      </div>
+                      <div className="border-top border-bottom d-flex pt-4 pb-4 ps-2 gap-2 align-items-center">
+                        <img
+                          src={item.buss_photo}
+                          alt="Logo"
+                          style={{ width: "8rem", height: "8rem" }}
+                        />
+                        <span className="d-flex flex-column">
+                          <label className="fw-bold">
+                            {item.buss_name}, {item.buss_type}
+                            {JSON.parse(item.buss_type_name).map(
+                              (data) => `, ${data}`
+                            )}
+                          </label>
+
+                          <label>Amount Invest: ₱ {item.invst_amt}</label>
+                          <label>{item.invst_num_month} months</label>
+                          <label>Interest: {item.invst_interest}%</label>
+                          <label>
+                            Total Interest: {item.invst_interest_sum}
+                          </label>
+                          <label>
+                            <label className="fw-bold">Total Return</label> ₱{" "}
+                            {item.invst_returned_amt}{" "}
+                          </label>
+                          <label>
+                            <label className="fw-bold">Commencement</label>{" "}
+                            {item.invst_status === "complete" ? (
+                              <label className="fw-bold rounded-pill p-1 ps-2 pe-2 bg-primary text-light">
+                                Claimed
+                              </label>
+                            ) : (
+                              <label
+                                className="rounded-pill p-1 bg-success shadow"
+                                style={{ fontSize: ".8rem" }}
+                              >
+                                {item.invst_start_date ? (
+                                  <>
+                                    {computeDateStart(
+                                      new Date(item.invst_start_date),
+                                      new Date(todayDate),
+                                      new Date(item.invst_end_date)
+                                    )}
+                                  </>
+                                ) : (
+                                  "In Progress"
+                                )}
+                              </label>
+                            )}
+                          </label>
+                        </span>
+                      </div>
+                      <div className="w-100 pt-4 d-flex justify-content-between gap-4 ps-2 pe-2">
+                        {item.invst_status === "complete" ? (
+                          ""
+                        ) : item.invst_status === "cancel" ? (
+                          <label>Investment is cancelled</label>
+                        ) : (
+                          <div className="d-flex gap-5">
+                            <label>
+                              <label className="fw-bold text-primary">
+                                Start Date:
+                              </label>{" "}
+                              {item.invst_start_date
+                                ? new Date(
+                                    item.invst_start_date
+                                  ).toLocaleDateString()
+                                : "Waiting"}
+                            </label>
+                            <label>
+                              <label className="fw-bold text-primary">
+                                Maturity Date:
+                              </label>{" "}
+                              {item.invst_end_date ? (
+                                <>
+                                  {" "}
+                                  {new Date(
+                                    item.invst_end_date
+                                  ).toLocaleDateString()}{" "}
+                                </>
+                              ) : (
+                                "Waiting"
+                              )}
+                            </label>
+                          </div>
+                        )}
+
+                        <div className=" d-flex justify-content-end gap-4">
+                          {item.invst_status === "request" ? (
+                            <button
+                              type="button"
+                              class="btn btn-secondary"
+                              onClick={() =>
+                                handleShowUpdateModalForm(
+                                  encrypTextId(item.buss_id.toString()),
+                                  encrypTextId(item.invst_id.toString()),
+                                  item
+                                )
+                              }
+                            >
+                              Update
+                            </button>
+                          ) : (
+                            ""
+                          )}
+                          {item.invst_status === "complete" ? (
+                            <>
+                              <h1>Your investment is complete</h1>
+                            </>
+                          ) : (
+                            <>
+                              {checkUserHasWithdrawRequest(item.invst_id)
+                                .value ? (
+                                <>
+                                  {new Date(todayDate) >=
+                                    new Date(item.invst_end_date) &&
+                                  item.invst_status === "started" &&
+                                  checkUserHasWithdrawRequest(item.invst_id)
+                                    .status === "send" ? (
+                                    <button
+                                      type="button"
+                                      class="btn btn-primary "
+                                      onClick={() =>
+                                        handleFeedbackShow(
+                                          item.user_profile,
+                                          `${item.user_fname} ${item.user_mname} ${item.user_lname}`,
+                                          item.user_id,
+                                          item.invst_id
+                                        )
+                                      }
+                                    >
+                                      Receive
+                                    </button>
+                                  ) : new Date(todayDate) >=
+                                      new Date(item.invst_end_date) &&
+                                    item.invst_status === "started" &&
+                                    checkUserHasWithdrawRequest(item.invst_id)
+                                      .status === "receive" ? (
+                                    ""
+                                  ) : new Date(todayDate) >=
+                                      new Date(item.invst_end_date) &&
+                                    item.invst_status === "started" &&
+                                    checkUserHasWithdrawRequest(item.invst_id)
+                                      .status === "cancel" ? (
+                                    <>
+                                      <label className="fw-bold">
+                                        Your withdrawal request was
+                                        cancel...Please request another
+                                        withdrawal
+                                      </label>
+                                      <button
+                                        type="button"
+                                        class="btn btn-success "
+                                        onClick={() => {
+                                          setAmountWithdraw(
+                                            parseFloat(item.invst_returned_amt)
+                                          );
+                                          setwithdrawInvstID(item.invst_id);
+                                          setShow(true);
+                                        }}
+                                      >
+                                        {" "}
+                                        {
+                                          checkUserHasWithdrawRequest(
+                                            item.invst_id
+                                          ).status
+                                        }
+                                        Withdraw
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <label className="fw-bold">
+                                      Waiting for withdrawal apporval
+                                    </label>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <p>
+                                    {
+                                      checkUserHasWithdrawRequest(item.invst_id)
+                                        .status
+                                    }
+                                  </p>
+                                  {new Date(todayDate) >=
+                                    new Date(item.invst_end_date) &&
+                                  item.invst_status === "started" ? (
+                                    <button
+                                      type="button"
+                                      class="btn btn-success "
+                                      onClick={() => {
+                                        setAmountWithdraw(
+                                          parseFloat(item.invst_returned_amt)
+                                        );
+                                        setwithdrawInvstID(item.invst_id);
+                                        setShow(true);
+                                      }}
+                                    >
+                                      {" "}
+                                      {
+                                        checkUserHasWithdrawRequest(
+                                          item.invst_id
+                                        ).status
+                                      }
+                                      Withdraw
+                                    </button>
+                                  ) : (
+                                    ""
+                                  )}
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  ) : item.invst_status === category ? (
+                    <>
+                      <div className="d-flex align-items-center pt-3 pb-3 justify-content-between">
+                        <span className="w-50 w-md d-flex align-items-center gap-4 ps-2">
+                          <label className="fw-bold">{`${item.user_fname} ${item.user_mname} ${item.user_lname}`}</label>
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary border border-2 border-primary"
+                          >
+                            View Business
+                          </button>
+                        </span>
+                        {item.invst_start_date && item.invst_end_date ? (
+                          <>
+                            {checkUserHasWithdrawRequest(item.invst_id)
+                              .status === "send" ? (
+                              <>
+                                {" "}
+                                {new Date(todayDate) >=
+                                  new Date(item.invst_end_date) &&
+                                item.invst_status === "started" ? (
+                                  <div className=" d-flex bg-secondary align-items-center w-50 justify-content-center">
+                                    <Typewriter
+                                      options={{
+                                        strings: [
+                                          "Your withdrawal amount has been send",
+                                          "Click the recieve button to complete the transactions.",
+                                        ],
+                                        autoStart: true,
+                                        loop: true,
+                                        deleteSpeed: 30,
+                                        delay: 70,
+                                        wrapperClassName:
+                                          "fw-bold text-primary",
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  ""
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                {" "}
+                                {new Date(todayDate) >=
+                                  new Date(item.invst_end_date) &&
+                                item.invst_status === "started" ? (
+                                  <div className=" d-flex bg-secondary align-items-center w-50 justify-content-center">
+                                    <Typewriter
+                                      options={{
+                                        strings: [
+                                          "Your investment is ready to be withdraw....",
+                                        ],
+                                        autoStart: true,
+                                        loop: true,
+                                        deleteSpeed: 30,
+                                        delay: 70,
+                                        wrapperClassName:
+                                          "fw-bold text-primary",
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  ""
+                                )}
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          ""
+                        )}
+
+                        <span className="w-50 d-flex align-items-center justify-content-end gap-4 me-3">
+                          {new Date(todayDate) >=
+                            new Date(item.invst_start_date) &&
+                          new Date(todayDate) <=
+                            new Date(item.invst_end_date) ? (
+                            <label className="fw-bold">
+                              Months Remains :{" "}
+                              <label className="text-primary">
+                                {" "}
+                                {calculateReaminingMonths(
+                                  new Date(todayDate),
+                                  new Date(item.invst_start_date),
+                                  new Date(item.invst_end_date)
+                                )}
+                              </label>
+                            </label>
+                          ) : (
+                            ""
+                          )}
+
+                          <label className="fw-bold text-primary">
+                            {item.invst_status.toUpperCase()}
+                          </label>
+                        </span>
+                      </div>
+                      <div className="border-top border-bottom d-flex pt-4 pb-4 ps-2 gap-2 align-items-center">
+                        <img
+                          src={item.buss_photo}
+                          alt="Logo"
+                          style={{ width: "8rem", height: "8rem" }}
+                        />
+                        <span className="d-flex flex-column">
+                          <label className="fw-bold">
+                            {item.buss_name}, {item.buss_type}
+                            {JSON.parse(item.buss_type_name).map(
+                              (data) => `, ${data}`
+                            )}
+                          </label>
+
+                          <label>Amount Invest: ₱ {item.invst_amt}</label>
+                          <label>{item.invst_num_month} months</label>
+                          <label>Interest: {item.invst_interest}%</label>
+                          <label>
+                            Total Interest: {item.invst_interest_sum}
+                          </label>
+                          <label>
+                            <label className="fw-bold">Total Return</label> ₱{" "}
+                            {item.invst_returned_amt}{" "}
+                          </label>
+                          <label>
+                            <label className="fw-bold">Commencement</label>{" "}
+                            {item.invst_status === "complete" ? (
+                              <label className="fw-bold rounded-pill p-1 ps-2 pe-2 bg-primary text-light">
+                                Claimed
+                              </label>
+                            ) : (
+                              <label
+                                className="rounded-pill p-1 bg-success shadow"
+                                style={{ fontSize: ".8rem" }}
+                              >
+                                {item.invst_start_date ? (
+                                  <>
+                                    {computeDateStart(
+                                      new Date(item.invst_start_date),
+                                      new Date(todayDate),
+                                      new Date(item.invst_end_date)
+                                    )}
+                                  </>
+                                ) : (
+                                  "In Progress"
+                                )}
+                              </label>
+                            )}
+                          </label>
+                          {/* <label>
+                          <label className="fw-bold">Latest Updates</label>{" "}
+                          <label
+                            className="rounded-pill p-1 bg-success shadow"
+                            style={{ fontSize: ".8rem" }}
+                          >
+                            {getLatestInvestment(item.invst_id)}
+                          </label>
+                        </label> */}
+                        </span>
+                      </div>
+                      <div className="w-100 pt-4 d-flex justify-content-between gap-4 ps-2 pe-2">
+                        {item.invst_status === "complete" ? (
+                          ""
+                        ) : item.invst_status === "cancel" ? (
+                          <label>Investment is cancelled</label>
+                        ) : (
+                          <div className="d-flex gap-5">
+                            <label>
+                              <label className="fw-bold text-primary">
+                                Start Date:
+                              </label>{" "}
+                              {item.invst_start_date
+                                ? new Date(
+                                    item.invst_start_date
+                                  ).toLocaleDateString()
+                                : "Waiting"}
+                            </label>
+                            <label>
+                              <label className="fw-bold text-primary">
+                                Maturity Date:
+                              </label>{" "}
+                              {item.invst_end_date ? (
+                                <>
+                                  {" "}
+                                  {new Date(
+                                    item.invst_end_date
+                                  ).toLocaleDateString()}{" "}
+                                </>
+                              ) : (
+                                "Waiting"
+                              )}
+                            </label>
+                          </div>
+                        )}
+
+                        <div className=" d-flex justify-content-end gap-4">
+                          {item.invst_status === "request" ? (
+                            <button
+                              type="button"
+                              class="btn btn-secondary"
+                              onClick={() =>
+                                handleShowUpdateModalForm(
+                                  encrypTextId(item.buss_id.toString()),
+                                  encrypTextId(item.invst_id.toString()),
+                                  item
+                                )
+                              }
+                            >
+                              Update
+                            </button>
+                          ) : (
+                            ""
+                          )}
+                          {item.invst_status === "complete" ? (
+                            <>
+                              <h1>Your investment is complete</h1>
+                            </>
+                          ) : (
+                            <>
+                              {checkUserHasWithdrawRequest(item.invst_id)
+                                .value ? (
+                                <>
+                                  {new Date(todayDate) >=
+                                    new Date(item.invst_end_date) &&
+                                  item.invst_status === "started" &&
+                                  checkUserHasWithdrawRequest(item.invst_id)
+                                    .status === "send" ? (
+                                    <button
+                                      type="button"
+                                      class="btn btn-primary "
+                                      onClick={() =>
+                                        handleFeedbackShow(
+                                          item.user_profile,
+                                          `${item.user_fname} ${item.user_mname} ${item.user_lname}`,
+                                          item.user_id,
+                                          item.invst_id
+                                        )
+                                      }
+                                    >
+                                      Receive
+                                    </button>
+                                  ) : new Date(todayDate) >=
+                                      new Date(item.invst_end_date) &&
+                                    item.invst_status === "started" &&
+                                    checkUserHasWithdrawRequest(item.invst_id)
+                                      .status === "recieve" ? (
+                                    ""
+                                  ) : new Date(todayDate) >=
+                                      new Date(item.invst_end_date) &&
+                                    item.invst_status === "started" &&
+                                    checkUserHasWithdrawRequest(item.invst_id)
+                                      .status === "cancel" ? (
+                                    <>
+                                      <label className="fw-bold">
+                                        Your withdrawal request was
+                                        cancel...Please request another
+                                        withdrawal
+                                      </label>
+                                      <button
+                                        type="button"
+                                        class="btn btn-success "
+                                        onClick={() => {
+                                          setAmountWithdraw(
+                                            parseFloat(item.invst_returned_amt)
+                                          );
+                                          setwithdrawInvstID(item.invst_id);
+                                          setShow(true);
+                                        }}
+                                      >
+                                        {" "}
+                                        {
+                                          checkUserHasWithdrawRequest(
+                                            item.invst_id
+                                          ).status
+                                        }
+                                        Withdraw
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <label className="fw-bold">
+                                      Waiting for withdrawal apporval
+                                    </label>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {new Date(todayDate) >=
+                                    new Date(item.invst_end_date) &&
+                                  item.invst_status === "started" ? (
+                                    <button
+                                      type="button"
+                                      class="btn btn-success "
+                                      onClick={() => {
+                                        setAmountWithdraw(
+                                          parseFloat(item.invst_returned_amt)
+                                        );
+                                        setwithdrawInvstID(item.invst_id);
+                                        setShow(true);
+                                      }}
+                                    >
+                                      Withdraw
+                                    </button>
+                                  ) : (
+                                    ""
+                                  )}
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    ""
+                  )}
+                </div>
+              ))}
+            </>
+          ) : (
+            ""
+          )}
+        </div>
+        {/* <div className="w-100 position-relative ">
           <Nav
             justify
             variant="underline"
@@ -399,29 +1140,40 @@ export default function Investment() {
             className="d-flex flex-row align-items-center mt-5 ps-3 mb-5 z-index-2  shadow-none border position-fixed bg-light"
           >
             <Nav.Item>
-              <Nav.Link to={"/investor/account/investment"} as={NavLink}>
+              <Nav.Link
+                to={"/investor/account/investment?status=all"}
+                as={NavLink}
+              >
                 All
               </Nav.Link>
             </Nav.Item>
 
             <Nav.Item>
-              <Nav.Link eventKey="/investor/account/investment?status=request">
+              <Nav.Link
+                to={"/investor/account/investment?status=request"}
+                as={NavLink}
+              >
                 Request
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="/investor/account/investment?status=approved">
+              <Nav.Link
+                to={"/investor/account/investment?status=approved"}
+                as={NavLink}
+              >
                 Approved
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="/investor/account/investment?status=returned">
+              <Nav.Link
+                to={"/investor/account/investment?status=returned"}
+                as={NavLink}
+              >
                 Returned
               </Nav.Link>
             </Nav.Item>
           </Nav>
-          <div className="mt-5 pt-5 d-flex flex-column justify-content-center p-2">
-            <div class="d-flex mb-3 mt-5">
+          <div class="d-flex mb-3 mt-5">
               <button
                 class="input-group-text bg-primary text-light"
                 id="inputGroup-sizing-default"
@@ -435,293 +1187,7 @@ export default function Investment() {
                 aria-label="Sizing example input"
               />
             </div>
-            {investments ? (
-              <>
-                {investments.map((item) => (
-                  <div
-                    className="border d-flex  flex-column  pb-4 mb-4"
-                    style={{ width: "100%" }}
-                    key={item.invst_id}
-                  >
-                    <div className="d-flex align-items-center pt-3 pb-3 justify-content-between">
-                      <span className="w-50 w-md d-flex align-items-center gap-4 ps-2">
-                        <label className="fw-bold">{`${item.user_fname} ${item.user_mname} ${item.user_lname}`}</label>
-                        <button
-                          type="button"
-                          class="btn btn-outline-primary border border-2 border-primary"
-                        >
-                          View Business
-                        </button>
-                      </span>
-                      {item.invst_start_date && item.invst_end_date ? (
-                        <>
-                          {checkUserHasWithdrawRequest(item.invst_id).status ===
-                          "send" ? (
-                            <>
-                              {" "}
-                              {new Date(todayDate) >=
-                                new Date(item.invst_end_date) &&
-                              item.invst_status === "started" ? (
-                                <div className=" d-flex bg-secondary align-items-center w-50 justify-content-center">
-                                  <Typewriter
-                                    options={{
-                                      strings: [
-                                        "Your withdrawal amount has been send",
-                                        "Click the recieve button to complete the transactions.",
-                                      ],
-                                      autoStart: true,
-                                      loop: true,
-                                      deleteSpeed: 30,
-                                      delay: 70,
-                                      wrapperClassName: "fw-bold text-primary",
-                                    }}
-                                  />
-                                </div>
-                              ) : (
-                                ""
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              {" "}
-                              {new Date(todayDate) >=
-                                new Date(item.invst_end_date) &&
-                              item.invst_status === "started" ? (
-                                <div className=" d-flex bg-secondary align-items-center w-50 justify-content-center">
-                                  <Typewriter
-                                    options={{
-                                      strings: [
-                                        "Your investment is ready to be withdraw....",
-                                      ],
-                                      autoStart: true,
-                                      loop: true,
-                                      deleteSpeed: 30,
-                                      delay: 70,
-                                      wrapperClassName: "fw-bold text-primary",
-                                    }}
-                                  />
-                                </div>
-                              ) : (
-                                ""
-                              )}
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        ""
-                      )}
-
-                      <span className="w-50 d-flex align-items-center justify-content-end gap-4 me-3">
-                        {new Date(todayDate) >=
-                          new Date(item.invst_start_date) &&
-                        new Date(todayDate) <= new Date(item.invst_end_date) ? (
-                          <label className="fw-bold">
-                            Months Remains :{" "}
-                            <label className="text-primary">
-                              {" "}
-                              {calculateReaminingMonths(
-                                new Date(todayDate),
-                                new Date(item.invst_start_date),
-                                new Date(item.invst_end_date)
-                              )}
-                            </label>
-                          </label>
-                        ) : (
-                          ""
-                        )}
-
-                        <label className="fw-bold text-primary">
-                          {item.invst_status.toUpperCase()}
-                        </label>
-                      </span>
-                    </div>
-                    <div className="border-top border-bottom d-flex pt-4 pb-4 ps-2 gap-2 align-items-center">
-                      <img
-                        src={item.buss_photo}
-                        alt="Logo"
-                        style={{ width: "8rem", height: "8rem" }}
-                      />
-                      <span className="d-flex flex-column">
-                        <label className="fw-bold">
-                          {item.buss_name}, {item.buss_type}
-                          {JSON.parse(item.buss_type_name).map(
-                            (data) => `, ${data}`
-                          )}
-                        </label>
-
-                        <label>Amount Invest: ₱ {item.invst_amt}</label>
-                        <label>{item.invst_num_month} months</label>
-                        <label>Interest: {item.invst_interest}%</label>
-                        <label>Total Interest: {item.invst_interest_sum}</label>
-                        <label>
-                          <label className="fw-bold">Total Return</label> ₱{" "}
-                          {item.invst_returned_amt}{" "}
-                        </label>
-                        <label>
-                          <label className="fw-bold">Commencement</label>{" "}
-                          {item.invst_status === "complete" ? (
-                            <label className="fw-bold rounded-pill p-1 ps-2 pe-2 bg-primary text-light">
-                              Claimed
-                            </label>
-                          ) : (
-                            <label
-                              className="rounded-pill p-1 bg-success shadow"
-                              style={{ fontSize: ".8rem" }}
-                            >
-                              {item.invst_start_date ? (
-                                <>
-                                  {computeDateStart(
-                                    new Date(item.invst_start_date),
-                                    new Date(todayDate),
-                                    new Date(item.invst_end_date)
-                                  )}
-                                </>
-                              ) : (
-                                "In Progress"
-                              )}
-                            </label>
-                          )}
-                        </label>
-                        {/* <label>
-                          <label className="fw-bold">Latest Updates</label>{" "}
-                          <label
-                            className="rounded-pill p-1 bg-success shadow"
-                            style={{ fontSize: ".8rem" }}
-                          >
-                            {getLatestInvestment(item.invst_id)}
-                          </label>
-                        </label> */}
-                      </span>
-                    </div>
-                    <div className="w-100 pt-4 d-flex justify-content-between gap-4 ps-2 pe-2">
-                      {item.invst_status === "complete" ? (
-                        ""
-                      ) : item.invst_status === "cancel" ? (
-                        <label>Investment is cancelled</label>
-                      ) : (
-                        <div className="d-flex gap-5">
-                          <label>
-                            <label className="fw-bold text-primary">
-                              Start Date:
-                            </label>{" "}
-                            {item.invst_start_date
-                              ? new Date(
-                                  item.invst_start_date
-                                ).toLocaleDateString()
-                              : "Waiting"}
-                          </label>
-                          <label>
-                            <label className="fw-bold text-primary">
-                              Maturity Date:
-                            </label>{" "}
-                            {item.invst_end_date ? (
-                              <>
-                                {" "}
-                                {new Date(
-                                  item.invst_end_date
-                                ).toLocaleDateString()}{" "}
-                              </>
-                            ) : (
-                              "Waiting"
-                            )}
-                          </label>
-                        </div>
-                      )}
-
-                      <div className=" d-flex justify-content-end gap-4">
-                        {item.invst_status === "request" ? (
-                          <button
-                            type="button"
-                            class="btn btn-secondary"
-                            onClick={() =>
-                              handleShowUpdateModalForm(
-                                encrypTextId(item.buss_id.toString()),
-                                encrypTextId(item.invst_id.toString()),
-                                item
-                              )
-                            }
-                          >
-                            Update
-                          </button>
-                        ) : (
-                          ""
-                        )}
-                        {item.invst_status === "complete" ? (
-                          <>
-                            <h1>Your investment is complete</h1>
-                          </>
-                        ) : (
-                          <>
-                            {checkUserHasWithdrawRequest(item.invst_id)
-                              .value ? (
-                              <>
-                                {new Date(todayDate) >=
-                                  new Date(item.invst_end_date) &&
-                                item.invst_status === "started" &&
-                                checkUserHasWithdrawRequest(item.invst_id)
-                                  .status === "send" ? (
-                                  <button
-                                    type="button"
-                                    class="btn btn-primary "
-                                    onClick={() =>
-                                      handleFeedbackShow(
-                                        item.user_profile,
-                                        `${item.user_fname} ${item.user_mname} ${item.user_lname}`,
-                                        item.user_id,
-                                        item.invst_id
-                                      )
-                                    }
-                                  >
-                                    Receive
-                                  </button>
-                                ) : new Date(todayDate) >=
-                                    new Date(item.invst_end_date) &&
-                                  item.invst_status === "started" &&
-                                  checkUserHasWithdrawRequest(item.invst_id)
-                                    .status === "recieve" ? (
-                                  ""
-                                ) : (
-                                  `${
-                                    checkUserHasWithdrawRequest(item.invst_id)
-                                      .value
-                                  }`
-                                )}
-                              </>
-                            ) : (
-                              <>
-                                {new Date(todayDate) >=
-                                  new Date(item.invst_end_date) &&
-                                item.invst_status === "started" ? (
-                                  <button
-                                    type="button"
-                                    class="btn btn-success "
-                                    onClick={() => {
-                                      setAmountWithdraw(
-                                        parseFloat(item.invst_returned_amt)
-                                      );
-                                      setwithdrawInvstID(item.invst_id);
-                                      setShow(true);
-                                    }}
-                                  >
-                                    Withdraw
-                                  </button>
-                                ) : (
-                                  ""
-                                )}
-                              </>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </>
-            ) : (
-              ""
-            )}
-          </div>
-        </div>
+        </div> */}
       </div>
     </>
   );

@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import "../Screens/CSS/pitch.css";
-import Address from "./address";
+
 import Accordion from "react-bootstrap/Accordion";
 import logoicon from "../icons/logo.jpg";
 
-import Alert from "react-bootstrap/Alert";
 import { v4 as uuidv4 } from "uuid";
-import { bussinessTypes, bussinessesName } from "../Components/bussinesDetails";
+
 import { storage } from "./firebaseConfig";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import axios from "axios";
@@ -16,26 +14,26 @@ import {
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useNavigate, useParams } from "react-router-dom";
+
 import Loader from "./loader";
-import { decryptId } from "./Encryptor";
+
 import Modal from "react-bootstrap/Modal";
 import { Loan } from "loanjs";
 import { calculateAge, formatDateToCustomString } from "../Utils/Compute";
 import AutoCompleteAddress from "./AutoCompleteAddress";
+import { LoanCalculate } from "./LoanCalculator";
 
 export default function Pitch({
   handleShowPitchBusiness,
   status,
   msg,
   alertType,
+  currentDate,
 }) {
-  const { id } = useParams();
   const user_id = localStorage.getItem("user_id");
 
-  const navigate = useNavigate();
   const [address, setAddress] = useState("");
-  const bussilistType = bussinessTypes();
+  const [bussilistType, setbussilistType] = useState([]);
   const [PaypalEmailAddress, setPaypalEmailAddres] = useState("");
   const [bussinessnameList, setbussinessnameList] = useState([]);
   //Working Usestate
@@ -44,7 +42,7 @@ export default function Pitch({
   const [logoDisplay, setLogoDisplay] = useState("");
   const [logo, setLogo] = useState("");
   const [bussExperinceValue, setBussExpereinceValue] = useState("");
-  const [bussLocationValue, setbussLocationValue] = useState("");
+
   const [bussExperienceYes, setBussExpereinceYes] = useState(false);
   const [bussExperienceNo, setBussExpereinceNo] = useState(false);
   const [supportingDoc, setSupportingDoc] = useState("");
@@ -53,17 +51,16 @@ export default function Pitch({
   const [textDisable, setTextDisble] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [hasbusinessBuild, sethasbusinessBuild] = useState(false);
-  // const [bussLocationNo, setBussLocationNo] = useState(false);
+
   const [targetAudience, setTargetAudience] = useState("");
-  const [bussBuildingPlaceName, setbussBuildingPlaceName] = useState("");
+
   const [useFunds, setUseFunds] = useState([]);
   const [fundAmount, setfundAmount] = useState("");
   const [fundProduct, setFundProduct] = useState("");
   const [prevBusinessName, setPrevBusinessName] = useState("");
   const [age, setAge] = useState(0);
-  const [Coaddress, setCoAddress] = useState("");
+
   const [buildingsNearMe, setbuildingNearMe] = useState("");
-  //Bussiness Logo
 
   const [bussineName, setBussinessName] = useState("");
   const [bussiness, setBussiness] = useState([]);
@@ -71,9 +68,29 @@ export default function Pitch({
   const [bussinessCapital, setBussinessCapital] = useState("");
   const [bussinessDetails, setBussinessDetails] = useState("");
 
+  useEffect(() => {
+    axios
+      .post(`${process.env.REACT_APP_NETWORK_ADD}/bussinesTypeList`)
+      .then((res) => {
+        setbussilistType(res.data.categoryres);
+        console.log(res.data.categoryres);
+        localStorage.setItem(
+          "subcategory",
+          JSON.stringify(res.data.subcategoryRes)
+        );
+      });
+  }, []);
+
   const setBussinessNameList = (code) => {
     console.log(code);
-    setbussinessnameList(bussinessesName(code));
+    const subCategory = JSON.parse(localStorage.getItem("subcategory"));
+    console.log(subCategory);
+    const filterBusinessSubCategory = subCategory.filter(
+      (item) => item.sub_ctg_ctg_id.toString() === code.toString()
+    );
+
+    console.log(filterBusinessSubCategory);
+    setbussinessnameList(filterBusinessSubCategory);
   };
 
   const handleSetBusiness = (e) => {
@@ -83,12 +100,7 @@ export default function Pitch({
       setBussiness([...bussiness, e]);
     }
   };
-  useEffect(() => {
-    console.log(bussiness);
-  }, [bussiness]);
 
-  // const uploadBussinessPhoto = async () => {
-  //   const strg = storage;
   //   const imgRef = ref(strg, "files/" + bussinessPhoto.name);
 
   //   uploadBytes(imgRef, bussinessPhoto)
@@ -373,14 +385,8 @@ export default function Pitch({
     }
     return downloadURL;
   };
-  const handleSetCapital = (e) => {
-    setBussinessCapital(e);
-  };
-  const handleOnBlur = (e) => {};
+
   const handlePitchBusiness = async () => {
-    console.log(address);
-    console.log(buildingsNearMe);
-    console.log(hasbusinessBuild);
     setShowLoader(true);
     setTextDisble(true);
 
@@ -401,8 +407,7 @@ export default function Pitch({
         user_id: user_id,
         bussiness: JSON.stringify(bussiness),
         address: address,
-        // province: address.province,
-        // barangay: address.barangay,
+
         bussLocationValue: hasbusinessBuild,
         bussBuildingPlaceName: JSON.stringify(buildingsNearMe),
         bussExperinceValue: bussExperinceValue,
@@ -452,34 +457,23 @@ export default function Pitch({
     }
   };
 
-  // const handleCheckboxChangeLocation = (e) => {
-  //   if (e === "yes") {
-  //     setBussLocationYes(!bussLocationYes);
-  //     setBussLocationNo(false);
-  //     setbussLocationValue("yes");
-  //   }
-  //   if (e === "no") {
-  //     setBussLocationNo(!bussLocationNo);
-  //     setBussLocationYes(false);
-  //     setbussLocationValue("no");
-  //   }
-  // };
-  // useEffect(() => {
-  //   console.log(bussiness);
-  // }, [bussiness]);
-
   const handleAddToUseFund = () => {
+    //const feeAmount = parseFloat(fundAmount) * parseFloat(0.034);
     setUseFunds([
       ...useFunds,
-      ...[{ id: uuidv4(), products: fundProduct, amount: fundAmount }],
+      ...[
+        {
+          id: uuidv4(),
+          products: fundProduct,
+          amount: fundAmount,
+          // fees: feeAmount,
+        },
+      ],
     ]);
 
     setFundProduct("");
     setfundAmount("");
   };
-  useEffect(() => {
-    console.log(useFunds);
-  }, [useFunds]);
 
   const handleRemoveFundsItems = (index) => {
     console.log(index);
@@ -488,6 +482,12 @@ export default function Pitch({
 
     setUseFunds(updatedItems);
   };
+
+  // useEffect(() => {
+  //   const simpleInterest = LoanCalculate(1000, 12, 5);
+  //   console.log(simpleInterest);
+  // }, []);
+
   useEffect(() => {
     let totalSum = 0;
 
@@ -495,166 +495,48 @@ export default function Pitch({
       totalSum += parseFloat(useFunds[i].amount);
     }
     const amount = totalSum;
-    const listStartDate = [];
-    const listEndDate = [];
+    // const listStartDate = [];
+    // const listEndDate = [];
     if (amount) {
-      const loans = new Loan(amount, 12, 5);
+      // const loans = new Loan(amount, 12, 5);
+      const simpleInterest = LoanCalculate(
+        amount,
+        12,
+        5,
+        new Date(currentDate)
+      );
+      // console.log(simpleInterest.updateReturnsWithDate);
+      //const loansInsallment = loans.installments;
 
-      console.log(loans);
-      const loansInsallment = loans.installments;
+      setTotalReturn(simpleInterest.totalAmountReturn);
+      setInstallments(simpleInterest.updateReturnsWithDate);
+      // const startDate = new Date(currentDate);
+      // for (let i = 0; i < 12; i++) {
+      //   const nextStartDate = new Date(startDate);
+      //   nextStartDate.setMonth(startDate.getMonth() + i);
+      //   listStartDate.push(nextStartDate);
 
-      setTotalReturn(loans.sum);
-      const startDate = new Date();
-      for (let i = 0; i < 12; i++) {
-        const nextStartDate = new Date(startDate);
-        nextStartDate.setMonth(startDate.getMonth() + i);
-        listStartDate.push(nextStartDate);
+      //   const nextEndDate = new Date(nextStartDate);
+      //   nextEndDate.setMonth(nextStartDate.getMonth() + 1);
+      //   nextEndDate.setDate(nextStartDate.getDate() - 1);
+      //   listEndDate.push(nextEndDate);
+      // }
+      // const updateReturnsWithDate = loansInsallment.map((item, index) => ({
+      //   ...item,
+      //   mindate: `${listStartDate[index].toDateString()} `,
+      //   maxdate: `${listEndDate[index].toDateString()}`,
 
-        const nextEndDate = new Date(nextStartDate);
-        nextEndDate.setMonth(nextStartDate.getMonth() + 1);
-        nextEndDate.setDate(nextStartDate.getDate() - 1);
-        listEndDate.push(nextEndDate);
-      }
-      const updateReturnsWithDate = loansInsallment.map((item, index) => ({
-        ...item,
-        mindate: `${listStartDate[index].toDateString()} `,
-        maxdate: `${listEndDate[index].toDateString()}`,
+      //   id: `${uuidv4()}`,
+      // }));
 
-        id: `${uuidv4()}`,
-      }));
-
-      console.log(updateReturnsWithDate);
+      //console.log(updateReturnsWithDate);
 
       ///Installments data
-      setInstallments(updateReturnsWithDate);
     }
     setBussinessCapital(totalSum);
   }, [useFunds]);
 
-  const handleCaculateAge = (birthdate) => setAge(calculateAge(birthdate));
-
-  // const handleSelectBusinessTypeName = (item) =>{
-  //   setBussiness();
-  // }
   return (
-    // <>
-    //   {showLoader ? (
-    //     <div className="load-com">
-    //       <Loader />
-    //     </div>
-    //   ) : (
-    //     <div className="pitch-container">
-    //       <div className="box-pitch">
-    //         <span className="icon" onClick={() => navigateBack()}>
-    //           <FontAwesomeIcon icon={faCircleXmark} size="2xl" />
-    //         </span>
-
-    //         <label>Business Name</label>
-    //         <br />
-    //         <input
-    //           type="text"
-    //           placeholder="eg. John Sari-sari store"
-    //           onChange={(e) => setBussinessName(e.target.value)}
-    //         />
-    //         <br />
-    //         <label>Selelct the Business Type</label>
-    //         <br />
-    //         <select
-    //           onChange={(e) => {
-    //             setBussinessNameList(e.target.value);
-    //             setBussinesType(e.target.options[e.target.selectedIndex].text);
-    //           }}
-    //         >
-    //           <option>Select Bussines Type</option>
-    //           {bussilistType.map((item) => (
-    //             <option key={item.id} value={item.bussine_type_code}>
-    //               {item.bussiness_type}
-    //             </option>
-    //           ))}
-    //         </select>
-    //         <br />
-    //         <label>Select the Business</label>
-    //         <br />
-    //         <select onChange={(e) => setBussiness(e.target.value)}>
-    //           <option>Select Bussines :</option>
-    //           {bussinessnameList.map((item) => (
-    //             <option key={item.id} value={item.bussiness_name}>
-    //               {item.bussiness_name}
-    //             </option>
-    //           ))}
-    //         </select>
-    //         <br />
-    //         <label>Select Business Address</label>
-    //         <br />
-    //         <Address addressData={setAddress} />
-    //         <br />
-    //         <label>Business Capital</label>
-    //         <br />
-    //         <input
-    //           type="number"
-    //           min={0}
-    //           max={50000}
-    //           placeholder="e.g 10000"
-    //           onChange={(e) => setBussinessCapital(e.target.value)}
-    //         />
-    //         <br />
-    //         <label>Provide a description of your business: </label>
-    //         <br />
-
-    //         <textarea
-    //           id="textarea"
-    //           spellCheck={true}
-    //           onChange={(e) => setBussinessDetails(e.target.value)}
-    //         />
-
-    //         <br />
-    //         <label>Attach Bussines Picture/Logo</label>
-    //         <br />
-    //         <input
-    //           type="file"
-    //           onChange={(e) =>
-    //             handleSetFiles("BusinessPhoto", e.target.files[0])
-    //           }
-    //           ref={fileInputRef}
-    //           accept="image/png, image/jpeg, image/jpg"
-    //         />
-    //         <br />
-    //         <br />
-    //         <h1>Business Credentials</h1>
-    //         <label>
-    //           Attach Mayor's Permit{" "}
-    //           <label style={{ color: "green" }}>optional</label>
-    //         </label>
-    //         <br />
-    //         <input
-    //           type="file"
-    //           onChange={(e) => handleSetFiles("MayorPermit", e.target.files[0])}
-    //           accept="application/pdf"
-    //         />
-    //         <br />
-    //         <label>Attach BIR Registration </label>
-    //         <br />
-    //         <input
-    //           type="file"
-    //           onChange={(e) => handleSetFiles("BIR", e.target.files[0])}
-    //           accept="application/pdf"
-    //         />
-    //         <br />
-    //         <label>Attach Barangay Clearance </label>
-    //         <br />
-    //         <input
-    //           type="file"
-    //           onChange={(e) =>
-    //             handleSetFiles("BRGYClearance", e.target.files[0])
-    //           }
-    //           accept="application/pdf"
-    //         />
-    //         <br />
-    //         <button onClick={() => HandleUploadFile()}>Pitch</button>
-    //       </div>
-    //     </div>
-    //   )}
-    // </>
     <>
       <Modal
         show={handleShowPitchBusiness}
@@ -731,10 +613,12 @@ export default function Pitch({
                         );
                       }}
                     >
-                      <option selected>Category</option>
+                      <option disabled selected>
+                        Category
+                      </option>
                       {bussilistType.map((item) => (
-                        <option key={item.id} value={item.category_code}>
-                          {item.category}
+                        <option key={item.id} value={item.ctg_id}>
+                          {item.ctg_name}
                         </option>
                       ))}
                     </select>
@@ -742,31 +626,22 @@ export default function Pitch({
                   <label className="form-label">Business Sub Category</label>
                   <div className="mb-3 d-flex  justify-content-between align-items-center flex-wrap">
                     {bussinessnameList.map((item) => (
-                      <div class="form-check w-50 " key={item.id}>
+                      <div class="form-check w-50 " key={item.sub_ctg_id}>
                         <input
                           class="form-check-input"
                           type="checkbox"
-                          value={item.bussiness}
+                          value={item.sub_ctg_name}
                           id="flexCheckDefault"
                           onChange={(e) => handleSetBusiness(e.target.value)}
                         />
                         <label class="form-check-label" for="flexCheckDefault">
-                          {item.bussiness}
+                          {item.sub_ctg_name}
                         </label>
                       </div>
                     ))}
-
-                    {/* <select class="form-select" disabled={textDisable}>
-                      <option>Select Bussines :</option>
-                      {bussinessnameList.map((item) => (
-                        <option key={item.id} value={item.bussiness}>
-                          {item.bussiness}
-                        </option>
-                      ))}
-                    </select> */}
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Address</label>
+                    <label className="form-label">Business Location</label>
                     {/* <Address addressData={setAddress} /> */}
                     <AutoCompleteAddress
                       address={setAddress}
@@ -774,58 +649,15 @@ export default function Pitch({
                       hasBuilding={sethasbusinessBuild}
                     />
                   </div>
-                  {/* <div className="mb-3">
-                    <label className="form-label">
-                      Does you business is near a school, department store,
-                      crowded places or etc...?
-                    </label>
-                    <div class="form-check ms-3">
-                      <input
-                        class="form-check-input"
-                        type="checkbox"
-                        value=""
-                        id="flexCheckDefault"
-                        checked={bussLocationYes}
-                        onChange={() => handleCheckboxChangeLocation("yes")}
-                      />
-                      <label class="form-check-label" for="flexCheckDefault">
-                        Yes
-                      </label>
-                    </div>
-                    <div class="form-check ms-3">
-                      <input
-                        class="form-check-input"
-                        type="checkbox"
-                        value=""
-                        id="flexCheckChecked"
-                        checked={bussLocationNo}
-                        onChange={() => handleCheckboxChangeLocation("no")}
-                      />
-                      <label class="form-check-label" for="flexCheckChecked">
-                        No
-                      </label>
-                    </div>
-
-                    <label className="form-lable mt-3">
-                      If yes. Provide the name of the building or place?
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g Sm Seaside"
-                      className="form-control ms-3"
-                      disabled={textDisable}
-                      onChange={(e) => setbussBuildingPlaceName(e.target.value)}
-                    />
-                  </div> */}
                 </div>
               </div>
             </div>
             <hr />
             <div className="p-3">
-              <h3>Business Expereince</h3>
+              <h3>Business Experience</h3>
               <div className="mb-3 mt-3 ms-4">
                 <label class="form-label">
-                  Do you have any expreince on business?
+                  Do you have any exprience on business?
                 </label>
                 <div className="d-flex">
                   <div class="form-check ms-3">
@@ -917,7 +749,7 @@ Explain why you believe there's demand within this audience."
               </div>
 
               <div class="mb-3 ms-3">
-                <label for="formFileMultiple" class="form-label">
+                <label for="formFile" class="form-label">
                   Attach any supporting documents
                 </label>
                 <input
@@ -925,8 +757,8 @@ Explain why you believe there's demand within this audience."
                   type="file"
                   id="formFileMultiple"
                   disabled={textDisable}
-                  multiple
                   onChange={(e) => setSupportingDoc(e.target.files)}
+                  accept=".pdf"
                 />
               </div>
             </div>
@@ -1017,7 +849,7 @@ Explain why you believe there's demand within this audience."
                   </div>
 
                   <div class="mb-3">
-                    <label for="formFileMultiple" class="form-label">
+                    <label  for="formFile" class="form-label">
                       Valid ID
                     </label>
                     <input
@@ -1035,6 +867,16 @@ Explain why you believe there's demand within this audience."
             <hr /> */}
             <div className="col container p-3">
               <h3>Funding Details</h3>
+              <label className="form-label mb-3 text-danger">
+                Note: You will return the amount with 5% interest in 12 months.
+                Once you've submitted your funding request, our team will review
+                it and generate a partial payment date for you. Please note that
+                the payment date will only be determined and updated once the
+                full capital amount has been provided.
+                {/* Please be advised that
+                each funds amount will be subject to a 3.40% for transaction fee
+                in sending that fund. */}
+              </label>
               <div class=" mb-3 ">
                 <div class="form-floating mb-3">
                   <input
@@ -1091,6 +933,7 @@ Explain why you believe there's demand within this audience."
                       <th>No.</th>
                       <th>Products</th>
                       <th>Amount</th>
+
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -1135,13 +978,6 @@ Explain why you believe there's demand within this audience."
                   readOnly
                 />
               </div>
-              <label className="form-label mb-3">
-                Note: You will return the amount with 5% interest in 12 months.
-                Once you've submitted your funding request, our team will review
-                it and generate a partial payment date for you. Please note that
-                the payment date will only be determined and updated once the
-                full capital amount has been provided.
-              </label>
 
               <Accordion>
                 <Accordion.Item eventKey="0">
@@ -1202,7 +1038,7 @@ Explain why you believe there's demand within this audience."
 
               <div className="ms-4">
                 <div class="mb-3">
-                  <label for="formFileMultiple" class="form-label">
+                  <label for="formFile" class="form-label">
                     Bussines Credentials
                   </label>
                   <input
@@ -1210,12 +1046,12 @@ Explain why you believe there's demand within this audience."
                     type="file"
                     id="formFile"
                     disabled={textDisable}
-                    multiple
                     onChange={(e) => setPermits(e.target.files)}
+                    accept=".pdf"
                   />
                 </div>
                 <div class="mb-3">
-                  <label for="formFileMultiple" class="form-label">
+                  <label for="formFile" class="form-label">
                     Proof of Residence
                   </label>
                   <input
@@ -1223,11 +1059,19 @@ Explain why you believe there's demand within this audience."
                     type="file"
                     id="formFile"
                     disabled={textDisable}
-                    multiple
                     onChange={(e) => setProofOfResdence(e.target.files)}
+                    accept=".pdf"
                   />
                 </div>
               </div>
+            </div>
+            <div className="container ">
+              <label className="form-label mb-3 text-danger ps-5 pe-5">
+                Please be advised that our administrative team will conduct a
+                thorough evaluation of your proposal over the next 1-2 business
+                days, assessing its feasibility, alignment with our objectives,
+                and collaboration potential.
+              </label>
             </div>
             <div className="container-fluid d-flex align-items-center justify-content-center">
               <button

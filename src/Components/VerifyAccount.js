@@ -5,6 +5,7 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Loader from "./loader";
+import Modal from "react-bootstrap/Modal";
 function VerifyAccount(props) {
   const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState("");
@@ -139,126 +140,121 @@ function VerifyAccount(props) {
       setBtnStatus(true);
     }
   }, [selectedImage, selectedIDFront, selectedIDBack, idType]);
-  return (
-    <div className="container-fluid mt-5 d-flex align-items-center justify-content-center">
-      <div className="shadow m-3 w-70">
-        <div className="d-flex flex-column justify-content-center align-items-center w-100   pt-3">
-          {selectedImage ? (
-            <img
-              src={selectedImage.imgUrl}
-              className=" border"
-              style={{ width: "15rem", height: "15rem" }}
-            />
-          ) : (
-            <img
-              src="https://t3.ftcdn.net/jpg/03/46/83/96/360_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg"
-              style={{ width: "15rem", height: "15rem" }}
-              className="rounded-circle border"
-            />
-          )}
-          <div class="mb-3 text-center">
-            <label for="formFileSm" class="fw-bold form-label">
-              2x2 Picture
-            </label>
-            <input
-              class="form-control form-control-sm"
-              id="formFileSm"
-              type="file"
-              accept="image/*"
-              onChange={handelUploadImage}
-            />
-          </div>
-          {/* <label>
-            2x2 Picture: <button onClick={RefInputImage}>Upload </button>
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            ref={fileInputRefImage}
-          /> */}
-        </div>
-        <div className="container w-75 mb-3">
-          <select
-            class="form-select"
-            aria-label="Default select example"
-            onChange={(e) => setIdType(e.target.value)}
-          >
-            <option selected>Select your ID type</option>
-            <option value="National ID">National ID</option>
-            <option value="Voter's ID">Voter's ID</option>
-            <option value="Driver License">Driver License</option>
-            <option value="NBI Clearance">NBI Clearance</option>
-            <option value="Police Clearance">Police Clearance</option>
-            <option value="Barangay Clearance">Barangay Clearance</option>
-          </select>
-        </div>
-        <div className="container d-flex  justify-content-center gap-5 align-items-center  ">
-          <div className="d-flex flex-column justify-content-center align-items-center ">
-            {selectedIDFront ? (
-              <img
-                src={selectedIDFront.imgUrl}
-                style={{ width: "25rem", height: "15rem" }}
-                className=" border"
-              />
-            ) : (
-              <img
-                src="https://t3.ftcdn.net/jpg/03/46/83/96/360_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg"
-                style={{ width: "25rem", height: "15rem" }}
-                className=" border"
-              />
-            )}
-            <div class="mb-3 text-center">
-              <label for="formFileSm" class="fw-bold form-label">
-                Front ID
-              </label>
-              <input
-                class="form-control form-control-sm"
-                id="formFileSm"
-                type="file"
-                accept="image/*"
-                onChange={handelUploadID}
-              />
-            </div>
-            {/* <label>
-              Front ID: <button onClick={RefInputId}>Upload</button>
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={handelUploadID}
-              ref={fileInputRefID}
-            /> */}
-          </div>
 
-          <div className="d-flex flex-column justify-content-center align-items-center">
-            {selectedIDBack ? (
-              <img
-                src={selectedIDBack.imgUrl}
-                style={{ width: "25rem", height: "15rem" }}
-                className=" border"
-              />
-            ) : (
-              <img
-                src="https://t3.ftcdn.net/jpg/03/46/83/96/360_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg"
-                style={{ width: "25rem", height: "15rem" }}
-                className=" border"
-              />
-            )}
-            <div class="mb-3 text-center">
-              <label for="formFileSm" class="fw-bold form-label">
-                Back ID
-              </label>
-              <input
-                class="form-control form-control-sm"
-                id="formFileSm"
-                type="file"
-                accept="image/*"
-                onChange={handelUploadIDBack}
-              />
+  const handleClose = () => {
+    navigate(-1);
+  };
+  return (
+    <Modal show={true} size="xl">
+      <Modal.Header closeButton onHide={handleClose}></Modal.Header>
+      <Modal.Body>
+        {" "}
+        <div className="container-fluid d-flex align-items-center justify-content-center">
+          <div className=" m-3 w-70">
+            <div className="d-flex flex-column justify-content-center align-items-center w-100   pt-3">
+              {selectedImage ? (
+                <img
+                  src={selectedImage.imgUrl}
+                  className=" border"
+                  style={{ width: "15rem", height: "15rem" }}
+                />
+              ) : (
+                <img
+                  src="https://t3.ftcdn.net/jpg/03/46/83/96/360_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg"
+                  style={{ width: "15rem", height: "15rem" }}
+                  className="rounded-circle border"
+                />
+              )}
+              <div class="mb-3 text-center">
+                <label for="formFileSm" class="fw-bold form-label">
+                  2x2 Picture
+                </label>
+                <input
+                  class="form-control form-control-sm"
+                  id="formFileSm"
+                  type="file"
+                  accept="image/*"
+                  onChange={handelUploadImage}
+                />
+              </div>
             </div>
-            {/* <label>
+            <div className="container w-75 mb-3">
+              <select
+                class="form-select"
+                aria-label="Default select example"
+                onChange={(e) => setIdType(e.target.value)}
+              >
+                <option selected>Select your ID type</option>
+                <option value="National ID">National ID</option>
+                <option value="Voter's ID">Voter's ID</option>
+                <option value="Driver License">Driver License</option>
+                <option value="NBI Clearance">NBI Clearance</option>
+                <option value="Police Clearance">Police Clearance</option>
+                <option value="Barangay Clearance">Barangay Clearance</option>
+              </select>
+            </div>
+            <div className="container d-flex  justify-content-center gap-5 align-items-center  ">
+              <div className="d-flex flex-column justify-content-center align-items-center ">
+                {selectedIDFront ? (
+                  <img
+                    src={selectedIDFront.imgUrl}
+                    style={{ width: "25rem", height: "15rem" }}
+                    className=" border"
+                  />
+                ) : (
+                  <>
+                    <img
+                      src="https://philsys.gov.ph/wp-content/uploads/2022/11/PhilID-specimen-Front_highres1-1024x576.png"
+                      style={{ width: "25rem", height: "15rem", opacity: ".5" }}
+                      className=" border position-relative"
+                    />
+                    <h2 className="position-absolute">Sample</h2>
+                  </>
+                )}
+                <div class="mb-3 text-center">
+                  <label for="formFileSm" class="fw-bold form-label">
+                    Front ID
+                  </label>
+                  <input
+                    class="form-control form-control-sm"
+                    id="formFileSm"
+                    type="file"
+                    accept="image/*"
+                    onChange={handelUploadID}
+                  />
+                </div>
+              </div>
+
+              <div className="d-flex flex-column justify-content-center align-items-center">
+                {selectedIDBack ? (
+                  <img
+                    src={selectedIDBack.imgUrl}
+                    style={{ width: "25rem", height: "15rem" }}
+                    className=" border"
+                  />
+                ) : (
+                  <>
+                    <img
+                      src="https://philsys.gov.ph/wp-content/uploads/2022/11/PhilID-specimen-Back_highres2-1024x576.png"
+                      style={{ width: "25rem", height: "15rem", opacity: ".5" }}
+                      className=" border position-relative"
+                    />
+                    <h2 className="position-absolute">Sample</h2>
+                  </>
+                )}
+                <div class="mb-3 text-center">
+                  <label for="formFileSm" class="fw-bold form-label">
+                    Back ID
+                  </label>
+                  <input
+                    class="form-control form-control-sm"
+                    id="formFileSm"
+                    type="file"
+                    accept="image/*"
+                    onChange={handelUploadIDBack}
+                  />
+                </div>
+                {/* <label>
               Back ID: <button onClick={RefInputIdBack}>Upload</button>
             </label>
             <input
@@ -268,27 +264,27 @@ function VerifyAccount(props) {
               onChange={handelUploadIDBack}
               ref={fileInputRefBack}
             /> */}
-          </div>
-        </div>
-        <div className="mb-3 d-flex align-items-center justify-content-center">
-          <button
-            onClick={handleSubmitVerfiyAccount}
-            type="button"
-            class="btn btn-primary rounded d-flex align-items-center justify-content-center gap-3"
-            disabled={btnStatus}
-          >
-            {showLoader ? (
-              <>
-                Uploading...
-                <Loader />
-              </>
-            ) : (
-              <> Submit</>
-            )}
-          </button>
-        </div>
+              </div>
+            </div>
+            <div className="mb-3 d-flex align-items-center justify-content-center">
+              <button
+                onClick={handleSubmitVerfiyAccount}
+                type="button"
+                class="btn btn-primary rounded d-flex align-items-center justify-content-center gap-3"
+                disabled={btnStatus}
+              >
+                {showLoader ? (
+                  <>
+                    Uploading...
+                    <Loader />
+                  </>
+                ) : (
+                  <> Submit</>
+                )}
+              </button>
+            </div>
 
-        {/* <div className="verify-user-content">
+            {/* <div className="verify-user-content">
           <div className="verify-user-pic-container">
             <h3>Person's Picture</h3>
             <div className="verify-upload-image">
@@ -355,8 +351,10 @@ function VerifyAccount(props) {
         <div>
           <button onClick={handleSubmitVerfiyAccount}>Submit and Exit</button>
         </div> */}
-      </div>
-    </div>
+          </div>
+        </div>
+      </Modal.Body>
+    </Modal>
   );
 }
 

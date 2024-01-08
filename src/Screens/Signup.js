@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../Screens/CSS/Signup.css";
 import PasswordStrengthBar from "react-password-strength-bar";
 import Axios from "axios";
@@ -6,8 +6,14 @@ import signupIcons from "../icons/signup.svg";
 import Address from "../Components/address";
 import { Toast, ToastContainer } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import TermsandCondition from "../Terms and Condition/Terms_and_Condition";
+import "react-phone-number-input/style.css";
+import PhoneInput from "react-phone-number-input";
+import ModalPhoneVerification from "../Components/ModalPhoneVerification";
+import cryptoRandomString from "crypto-random-string";
 export default function Signup() {
   const navigate = useNavigate();
+  const [generatedCodes, setGeneratedCodes] = useState("");
   const [usertype, setUserType] = useState("");
   const [firstname, setFirstname] = useState("");
   const [middlename, setMiddleName] = useState("");
@@ -24,6 +30,11 @@ export default function Signup() {
   const [alertMsg, setAlertMsg] = useState("");
   const [show, setShow] = useState(false);
   const [alertType, setAlertType] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showVerifyPhoneNumber, setShowVerifyPhoneNumber] = useState(false);
+  const isVerifyPhone = localStorage.getItem("isVerifyPhone");
+  const [showSignUpBtn, setShowSignUpBtn] = useState(true);
+  const [showVerfiyModal, setShowVerifyModal] = useState(false);
   const settingTypeofUser = (userType) => {
     setUserType(userType);
   };
@@ -33,7 +44,6 @@ export default function Signup() {
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
 
-    // Check if the birthday has occurred this year
     if (
       today.getMonth() < birthDate.getMonth() ||
       (today.getMonth() === birthDate.getMonth() &&
@@ -47,6 +57,22 @@ export default function Signup() {
   const handleSetAge = (birthdate) => {
     setUserAge(calculateAge(birthdate));
   };
+
+  useEffect(() => {
+    if (phonenum) {
+      setShowVerifyPhoneNumber(true);
+    } else {
+      setShowVerifyPhoneNumber(false);
+    }
+  }, [phonenum]);
+
+  useEffect(() => {
+    if (isVerifyPhone) {
+      setShowSignUpBtn(false);
+    } else {
+      setShowSignUpBtn(true);
+    }
+  }, [isVerifyPhone]);
 
   const createAcount = () => {
     if (passStrength < 3) {
@@ -69,6 +95,7 @@ export default function Signup() {
           province: address.province,
           city: address.city,
           barangay: address.barangay,
+          isVerifyPhone,
         })
           .then((res) => {
             if (res.data.status) {
@@ -95,8 +122,64 @@ export default function Signup() {
     }
   };
 
+  const handleSendPhoneVerfication = () => {
+    Axios.post(`${process.env.REACT_APP_NETWORK_ADD}/check-phone`, {
+      phonenum,
+    }).then((res) => {
+      if (!res.data.status) {
+        setAlertType("danger");
+        setAlertMsg(res.data.message);
+        setShow(true);
+      } else {
+        const generatedCode = cryptoRandomString({
+          length: 6,
+          type: "numeric",
+        });
+        setGeneratedCodes(generatedCode);
+        if (phonenum) {
+          Axios.post(`${process.env.REACT_APP_NETWORK_ADD}/send-sms`, {
+            phonenum: phonenum,
+            generatedCode,
+          })
+            .then((res) => {
+              if (res.data.status) {
+                setAlertMsg(res.data.message);
+                setShow(true);
+                setAlertType("success");
+                handleShow();
+              } else {
+                setAlertType("danger");
+                setAlertMsg(res.data.message);
+                setShow(true);
+              }
+            })
+            .catch((error) => {
+              setAlertType("danger");
+              setAlertMsg(error.message);
+              setShow(true);
+            });
+        } else {
+          setAlertType("danger");
+          setAlertMsg("Wrong number");
+          setShow(true);
+        }
+      }
+    });
+  };
+  const handleShow = () => {
+    setShowVerifyModal(!showVerfiyModal);
+  };
   return (
     <div className="contianer">
+      {showVerfiyModal ? (
+        <ModalPhoneVerification
+          handleShow={handleShow}
+          generatedCodes={generatedCodes}
+        />
+      ) : (
+        ""
+      )}
+      <TermsandCondition />
       <ToastContainer position="top-center" className="p-3">
         <Toast
           className="d-inline-block m-1"
@@ -126,13 +209,13 @@ export default function Signup() {
 
           <div className="personal">
             <h4>Account Information</h4>
-            <label>What is your rule? </label>
+            <label>What is your role? </label>
             <select
               onChange={(e) => settingTypeofUser(e.target.value)}
               className="form-select"
               aria-label="Default select example"
             >
-              <option value="">Select rule :</option>
+              <option disabled>Select role :</option>
               <option value="entrepreneur">Entreprenuer</option>
               <option value="investor">Investor</option>
             </select>
@@ -152,7 +235,7 @@ export default function Signup() {
               <div className=" mt-3">
                 <div class="form-floating">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     class="form-control"
                     id="floatingPassword"
                     placeholder="Password"
@@ -176,13 +259,25 @@ export default function Signup() {
 
               <div class="form-floating">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   class="form-control"
                   id="floatingPassword"
                   placeholder="Password"
                   onChange={(e) => setConPass(e.target.value)}
                 />
                 <label for="floatingInput">Confirm Password</label>
+              </div>
+              <div class="form-check mt-3 ms-3">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value=""
+                  id="flexCheckDefault"
+                  onChange={() => setShowPassword(!showPassword)}
+                />
+                <label class="form-check-label  fw-bold" for="flexCheckDefault">
+                  Show Password
+                </label>
               </div>
             </div>
             <div className="mb-3 ">
@@ -239,27 +334,46 @@ export default function Signup() {
                 <label for="floatingInput">Age</label>
               </div>
 
-              <label>Select you gender: </label>
               <select
                 name="gender"
                 onChange={(e) => setGender(e.target.value)}
                 className="form-select"
                 aria-label="Default select example"
               >
+                {/* <option value="male">Select</option> */}
+                <option disabled>Select your gender: </option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="unknown">Prefer not to say</option>
               </select>
 
               <div class="form-floating mb-3 mt-3">
-                <input
-                  type="email"
+                {/* <input
+                  type="text"
                   class="form-control"
                   id="floatingInput"
                   placeholder="name@example.com"
                   onChange={(e) => setPhonum(e.target.value)}
                 />
-                <label for="floatingInput">Phone Number</label>
+                <label for="floatingInput">Phone Number</label> */}
+                <PhoneInput
+                  placeholder="Enter phone number"
+                  value={phonenum}
+                  class="form-control"
+                  onChange={setPhonum}
+                  defaultCountry="PH"
+                />
+                {showVerifyPhoneNumber && showSignUpBtn ? (
+                  <button
+                    type="button"
+                    class="btn btn-primary mt-2"
+                    onClick={handleSendPhoneVerfication}
+                  >
+                    Verfiy Phonenumber
+                  </button>
+                ) : (
+                  ""
+                )}
               </div>
             </div>
             <h4>Address Information</h4>
@@ -271,6 +385,7 @@ export default function Signup() {
               <button
                 onClick={() => createAcount()}
                 className="btn btn-primary btn-lg col-10"
+                disabled={showSignUpBtn}
               >
                 Signup
               </button>

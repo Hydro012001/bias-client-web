@@ -6,7 +6,10 @@ import { Loan } from "loanjs";
 import InvestModal from "../../Components/InvestModal";
 import { Toast, ToastContainer, Alert, Button } from "react-bootstrap";
 import { mapInvestorProfile } from "../../Utils/InvestorProfileMap";
-import { displayBusinessStation } from "../../Utils/Compute";
+import calculateTotalInvest, {
+  displayBusinessStation,
+} from "../../Utils/Compute";
+import { LoanCalculate } from "../../Components/LoanCalculator";
 function ViewBusinesInvestor(props) {
   const location = useLocation();
   const searchLocation = new URLSearchParams(location.search);
@@ -31,7 +34,6 @@ function ViewBusinesInvestor(props) {
       })
       .then((res) => {
         if (res.data.status) {
-          console.log(res.data.result);
           setBusinessDetails(res.data.result);
           setCapital(res.data.result[0].buss_capital);
           setIntrest(res.data.result[0].buss_approved_percent);
@@ -40,16 +42,15 @@ function ViewBusinesInvestor(props) {
           if (res.data.hasInvesment) {
             setShowAlert(true);
           }
-          console.log(res.data.message);
         }
       })
       .catch((error) => alert(error.message));
   }, [business]);
 
   const computeReturn = (amount, interest, month) => {
-    const loandata = new Loan(amount, month, parseInt(interest));
-
-    return loandata.sum;
+    //  const loandata = new Loan(amount, month, parseInt(interest));
+    const loandata = LoanCalculate(amount, month, parseInt(interest));
+    return loandata.totalAmountReturn;
   };
   const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
@@ -71,13 +72,11 @@ function ViewBusinesInvestor(props) {
             }
           } else {
             setshowNotVerified(true);
-            setShowAlert(true);
           }
         } else {
           setAlertMsg(res.data.message);
           setalertStatus(true);
           setAlertType("danger");
-          setshowNotVerified(true);
         }
       })
       .catch((error) => {
@@ -87,39 +86,43 @@ function ViewBusinesInvestor(props) {
       });
   };
 
-  const calculateTotalInvest = (investment) => {
-    const investDetails = investment.map((item) => item.invest_amount);
+  // const calculateTotalInvest = (investment) => {
+  //   const investDetails = investment.map((item) => item.invest_amount);
 
-    let totalSum = 0;
+  //   let totalSum = 0;
 
-    for (let i = 0; i < investDetails.length; i++) {
-      totalSum += parseFloat(investDetails[i]);
-    }
-    if (totalSum) {
-      return totalSum;
-    } else {
-      return 0;
-    }
-  };
+  //   for (let i = 0; i < investDetails.length; i++) {
+  //     totalSum += parseFloat(investDetails[i]);
+  //   }
+  //   if (totalSum) {
+  //     return totalSum;
+  //   } else {
+  //     return 0;
+  //   }
+  // };
   return (
     <>
-      <ToastContainer position="top-center" className="p-3">
-        <Toast
-          className="d-inline-block m-1"
-          bg="danger"
-          show={showNotVerified}
-          delay={2000}
-          onClose={() => {
-            setshowNotVerified(false);
-            navigate("/investor/account/profile");
-          }}
-          autohide
-        >
-          <Toast.Body className="primary text-light">
-            You are not verified...Please verify your account first
-          </Toast.Body>
-        </Toast>
-      </ToastContainer>
+      {showNotVerified ? (
+        <ToastContainer position="top-center" className="p-3">
+          <Toast
+            className="d-inline-block m-1"
+            bg="danger"
+            show={showNotVerified}
+            delay={2000}
+            onClose={() => {
+              setshowNotVerified(!showNotVerified);
+              navigate("/investor/account/profile");
+            }}
+            autohide
+          >
+            <Toast.Body className="primary text-light">
+              You are not verified...Please verify your account first
+            </Toast.Body>
+          </Toast>
+        </ToastContainer>
+      ) : (
+        ""
+      )}
 
       <ToastContainer position="top-center" className="p-3">
         <Toast
@@ -390,14 +393,14 @@ function ViewBusinesInvestor(props) {
                             {item.buss_target_audience}
                           </label>
                         </div>
-                        <div className="mb-4">
+                        {/* <div className="mb-4">
                           <label className="fs-5 bg-info d-flex align-items-center mb-3 ps-3 pt-2 pb-2">
                             Target Audience
                           </label>
                           <label className="ps-3">
                             {item.buss_target_audience}
                           </label>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   ))}
